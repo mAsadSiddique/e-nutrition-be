@@ -1,0 +1,72 @@
+import * as sgMail from '@sendgrid/mail'
+import { ENV } from 'src/config/constant'
+
+export class Mailer {
+	static async forgotPassword(email: string, name: string, code: string): Promise<boolean> {
+		sgMail.setApiKey(ENV.EMAIL_CONFIG.SEND_GRID_API_KEY || '')
+		const msg = {
+			to: email,
+			from: process.env.SUPPORT_SENDER_EMAIL,
+			templateId: 'd-1d717d7a8b024d38ada909d57343dfb4',
+			dynamic_template_data: {
+				name: name?.trim.length ? name : 'user',
+				code,
+				supportEmail: process.env.SUPPORT_EMAIL || 'support@healthcare.com',
+				securityEmail: process.env.SECURITY_EMAIL || 'security@healthcare.com'
+			},
+		}
+		try {
+			await sgMail.send(msg as any)
+			return true
+		} catch (error) {
+			console.log(JSON.stringify(error))
+			return false
+		}
+	}
+
+	static async sendEmailVerificationCode(email: string, name: string, code: string): Promise<boolean> {
+		sgMail.setApiKey(ENV.EMAIL_CONFIG.SEND_GRID_API_KEY || '')
+		const msg = {
+			to: email,
+			from: ENV.EMAIL_CONFIG.SUPPORT_SENDER_EMAIL,
+			templateId: 'd-db9728ea016940029cc560af37824199',
+			dynamic_template_data: {
+				name: name?.trim.length ? name : 'user',
+				code,
+				supportEmail: process.env.SUPPORT_EMAIL || 'support@healthcare.com',
+				securityEmail: process.env.SECURITY_EMAIL || 'security@healthcare.com'
+			},
+		}
+		try {
+			await sgMail.send(msg)
+			return true
+		} catch (error) {
+			console.log(JSON.stringify(error))
+			return false
+		}
+	}
+
+	static async sendAdminCredentials(email: string, name: string, password: string): Promise<boolean> {
+		sgMail.setApiKey(ENV.EMAIL_CONFIG.SEND_GRID_API_KEY || '')
+		const msg = {
+			to: email,
+			from: process.env.SUPPORT_SENDER_EMAIL,
+			templateId: 'd-2df7002668164ca2af47170328c393c5',
+			dynamic_template_data: {
+				name: name?.trim?.length ? name : 'Admin',
+				email,
+				password,
+				supportEmail: process.env.SUPPORT_EMAIL || 'support@healthcare.com',
+				securityEmail: process.env.SECURITY_EMAIL || 'security@healthcare.com',
+			},
+		}
+
+		try {
+			await sgMail.send(msg as any)
+			return true
+		} catch (error) {
+			console.error(`${this.sendAdminCredentials.name} throwing error during sending email:`, JSON.stringify(error))
+			return false
+		}
+	}
+}
