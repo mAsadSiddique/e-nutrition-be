@@ -1,0 +1,64 @@
+import * as dotenv from 'dotenv'
+import {envValidationSchema} from './env.validation'
+
+dotenv.config()
+dotenv.config({path: `envConfig/${process.env.NODE_ENV}.env`})
+
+const parsed = envValidationSchema.safeParse(process.env)
+
+if (!parsed.success) {
+	console.error('❌ Invalid environment variables:', parsed.error.format())
+	throw new Error('Environment validation error. Check your .env file.')
+}
+
+const env = parsed.data
+
+export const ENV = {
+
+	NODE_ENV: env.NODE_ENV,
+	PORT: Number(env.PORT),
+
+	DB: {
+		HOST: env.DB_HOST,
+		PORT: env.DB_PORT,
+		USERNAME: env.DB_USERNAME,
+		PASSWORD: env.DB_PASSWORD,
+		NAME: env.DB_NAME,
+		TYPE: env.DB_TYPE,
+		MAX_POOL_SIZE: env.MAX_POOL_SIZE,
+		MIN_POOL_SIZE: env.MIN_POOL_SIZE,
+	},
+
+	JWT: {
+		SECRET: env.JWT_SECRET,
+		EXPIRES_IN: env.JWT_EXPIRES_IN,
+		SALT_ROUNDS: env.SALT_ROUNDS,
+	},
+
+	S3_BUCKET: {
+		NAME: env.BUCKET_NAME,
+		REGION: env.BUCKET_REGION,
+		ACCESS_KEY_ID: env.BUCKET_ACCESS_KEY_ID,
+		SECRET_ACCESS_KEY: env.BUCKET_SECRET_ACCESS_KEY,
+		ENDPOINT: env.BUCKET_ENDPOINT,
+		INTERNAL_BUCKET_NAME: env.INTERNAL_BUCKET_NAME,
+	},
+
+	DEFAULT_USER: {
+		NAME: env.DEFAULT_USER_NAME,
+		PASSWORD: env.DEFAULT_PASSWORD,
+	},
+
+	FILE_SIZE: {
+		IMAGE_FILE_SIZE: env.IMAGE_FILE_SIZE,
+		VIDEO_FILE_SIZE: env.VIDEO_FILE_SIZE,
+		AUDIO_FILE_SIZE: env.AUDIO_FILE_SIZE,
+		FIELD_SIZE: env.IMAGE_FIELD_SIZE,
+	},
+	EMAIL_CONFIG: {
+		SEND_GRID_API_KEY: env.SEND_GRID_API_KEY,
+		SUPPORT_SENDER_EMAIL: env.SUPPORT_SENDER_EMAIL,
+	},
+
+	// Add more groups as needed
+}
