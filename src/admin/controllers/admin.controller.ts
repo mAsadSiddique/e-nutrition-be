@@ -106,11 +106,9 @@ export class AdminController {
 		type: Admin,
 	})
 	@ApiNotAcceptableResponse({ description: RESPONSE_MESSAGES.PASSWORD_ALREADY_SET })
-	@Role(Roles.SUPER, Roles.SUB)
-	@UseGuards(AdminAuthGuard, RoleGuard)
 	@Put('/set/password')
-	async setPassword(@Body() args: ReSetPasswordDTO, @user() admin: Admin) {
-		return await this.adminAccountService.setPassword(args, admin)
+	async setPassword(@Body() args: ReSetPasswordDTO) {
+		return await this.adminAccountService.setPassword(args)
 	}
 
 	@ApiCreatedResponse({
@@ -118,9 +116,9 @@ export class AdminController {
 		type: Admin,
 	})
 	@ApiNotFoundResponse({ description: RESPONSE_MESSAGES.ADMIN_NOT_FOUND })
-	@GuardName(GuardsEnum.ADMIN)
+	@Role(Roles.SUPER)
 	@UseGuards(AdminAuthGuard, RoleGuard)
-	@Put('/block')
+	@Put('/block/toggle')
 	async blockAdmin(@Body('id', ParseIntPipe) id: number, @user() admin: Admin) {
 		return await this.adminService.blockAdminToggle(id, admin)
 	}
@@ -130,10 +128,9 @@ export class AdminController {
 		type: Admin,
 	})
 	@ApiNotFoundResponse({ description: RESPONSE_MESSAGES.ADMIN_NOT_FOUND })
-	@Role(Roles.SUPER)
 	@GuardName(GuardsEnum.ADMIN)
 	@UseGuards(AdminAuthGuard, RoleGuard)
-	@Put('/update')
+	@Put('/role')
 	async updateAdmin(@Body() args: UpdateAdminDTO, @user() admin: Admin) {
 		return await this.adminService.updateAdminRole(args, admin)
 	}
@@ -142,10 +139,10 @@ export class AdminController {
 		description: RESPONSE_MESSAGES.ADMIN_LISTING,
 		type: Admin,
 	})
-	@Role(Roles.SUPER)
+	@Role(Roles.SUPER, Roles.SUB)
 	@GuardName(GuardsEnum.ADMIN)
 	@UseGuards(AdminAuthGuard, RoleGuard)
-	@Get('/admin/listing')
+	@Get('/listing')
 	async adminListing(@Query() args: AdminListingDTO) {
 		return await this.adminService.adminsListing(args)
 	}

@@ -40,7 +40,7 @@ export class AdminAuthGuard implements CanActivate {
 			}
 
 			// Verify JWT token and extract payload
-			const payload = await this.jwtService.verifyAsync(req.headers.authorization, {secret: ENV.JWT.SECRET})
+			const payload = (await this.jwtService.verifyAsync(req.headers.authorization, {secret: ENV.JWT.SECRET}))
 			if (!payload?.email) {
 				this.logger.warn('JWT payload missing email')
 				this.exceptionService.sendUnauthorizedException(RESPONSE_MESSAGES.JWT_INVALID)

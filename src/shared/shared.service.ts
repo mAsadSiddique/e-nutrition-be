@@ -163,13 +163,27 @@ export class SharedService {
 	}
 
 	/**
+	 * @description verify password are same or not
+	 * @param password
+	 * @param secondPassword
+	 * @author Waqar Hussain
+	 */
+	isValidPassword(defaultPassword: string, hashedPassword: string) {
+		try {
+			return bcrypt.compareSync(defaultPassword, hashedPassword)
+		} catch (error) {
+			this.sendError(error, this.isValidPassword.name)
+		}
+	}
+
+	/**
 	 * @description returns jwt
 	 * @param payload
 	 * @author Waqar Hussain
 	 */
 	generateJwt(payload: ObjectType) {
 		try {
-		return jwt.sign({ payload }, ENV.JWT.SECRET, { expiresIn: ENV.JWT.EXPIRES_IN } as any)
+		return jwt.sign( payload , ENV.JWT.SECRET, { expiresIn: ENV.JWT.EXPIRES_IN } as any)
 		} catch (error) {
 			this.sendError(error, this.generateJwt.name)
 		}
@@ -455,7 +469,7 @@ export class SharedService {
 
 	getJwt(payload: ObjectType) {
 		try {
-			return jwt.sign({ payload }, ENV.JWT.SECRET, { expiresIn: ENV.JWT.EXPIRES_IN } as any)
+			return jwt.sign( payload , ENV.JWT.SECRET, { expiresIn: ENV.JWT.EXPIRES_IN } as any)
 		} catch (error) {
 			throw error
 		}

@@ -30,9 +30,10 @@ export enum RESPONSE_MESSAGES {
 	ADMIN_REGISTERED_A_USER = 'Admin registered a user successfully',
 	ADMIN_EMAIL_ALREADY_VERIFIED = 'Admin email already verified',
 	EMAIL_VERIFICATION_CODE_SENT = 'Verification code sent successfully. Please check your email to verify your account.',
+	EMAIL_RESEND_CODE = 'Reset password code sent to your email, please check your inbox',
 	PHONE_NUMBER_NOT_SUPPORTED = 'Phone number is not supported yet',	
 	ADMIN_LISTING = 'Admins listing',
-
+	ADMIN_ROLE_UPDATED = 'Admin role updated successfully',
 	// Password
 	PASSWORD_NOT_MATCHED = 'password and confirm password must matched',
 	INVALID_CREDENTIALS = 'invalid Credentials',
@@ -43,7 +44,8 @@ export enum RESPONSE_MESSAGES {
 	PASSWORD_SET = 'password set successfully',
 	PASS_CANT_SAME = `new and old password can't be same `,
 	CANT_CHANGE_PASSWORD = `you are advised to go for set password`,
-	OLD_AND_NEW_PASSWORD_SHOULD_NOT_SAME=`New and old password can't be same `,
+	OLD_AND_NEW_PASSWORD_SHOULD_NOT_SAME = `New and old password can't be same `,
+	INVALID_OLD_PASSWORD = 'Invalid old password',
 	// CANT_CHANGE_PASSWORD = `you can't change password until your are registered with email and password`,
 
 

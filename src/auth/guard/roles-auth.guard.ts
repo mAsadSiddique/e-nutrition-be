@@ -23,11 +23,11 @@ export class RoleGuard implements CanActivate {
 
         const { user } = context.switchToHttp().getRequest()
         
-        if (!user || !user.payload) {
+        if (!user) {
             this.exceptionService.sendUnauthorizedException(RESPONSE_MESSAGES.JWT_INVALID)
         }
 
-        const userRole = user.payload.role
+        const userRole = user.role
         const hasRole = requiredRoles.some((role) => userRole === role)
 
         if (!hasRole) {

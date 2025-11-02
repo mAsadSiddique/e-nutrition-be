@@ -31,15 +31,12 @@ export class AdminAccountService {
 		private readonly adminService: AdminService
 	) { }
 
-	forgotPassEmailVerificationDelay: Map<number, Date> = new Map()
-	resendEmailVerificationDelay: Map<number, Date> = new Map()
-
 	async resendEmail(args: ResendEmailDTO) {
 		try {
 			const admin = await this.adminService.getAdminByEmail(args.email)
 			if (!admin) this.exceptionService.sendNotFoundException(RESPONSE_MESSAGES.ADMIN_NOT_FOUND)
 
-			if (admin.password !== ENV.DEFAULT_USER.PASSWORD || admin.isEmailVerified) {
+			if (!this.sharedService.isValidPassword(ENV.DEFAULT_USER.PASSWORD, admin.password) || admin.isEmailVerified) {
 				this.exceptionService.sendNotAcceptableException(RESPONSE_MESSAGES.PASSWORD_ALREADY_SET)
 			}
 			const msg = await this.sendSetPasswordCode(args, admin) as string
@@ -53,16 +50,16 @@ export class AdminAccountService {
 		}
 	}
 
-	async login(loginObj: LoginDTO) {
+	async login(args: LoginDTO) {
 		try {
-			const admin = await this.getUserOrThrowException(loginObj) as Admin
+			const admin = await this.getUserOrThrowException({email:args.email}) as Admin
 			if (admin.isBlocked) {
 				this.exceptionService.sendForbiddenException(RESPONSE_MESSAGES.USER_BLOCKED)
 			}
 			if (!admin.isEmailVerified) {
 				this.exceptionService.sendUnprocessableEntityException(RESPONSE_MESSAGES.USER_EMAIL_UNVERIFIED)
 			}
-			this.sharedService.bcryptCompareVerificatoin(loginObj.password, admin.password)
+			this.sharedService.bcryptCompareVerificatoin(args.password, admin.password)
 			let user: any = this.adminService.getPayload(admin)
 			let msg: RESPONSE_MESSAGES
 			const data = {}
@@ -79,15 +76,17 @@ export class AdminAccountService {
 		}
 	}
 
-	async setPassword(args: SetPasswordDTO, user: Admin ) {
+	async setPassword(args: SetPasswordDTO ) {
 		try {
-			if (user.password !== process.env.DEFAULT_PASSWORD) {
+			const admin = await this.getUserOrThrowException({email: args.email}) as Admin
+			if ( !this.sharedService.isValidPassword(ENV.DEFAULT_USER.PASSWORD, admin.password)) {
 				this.exceptionService.sendNotFoundException(RESPONSE_MESSAGES.PASSWORD_ALREADY_SET)
 			}
-			await this.verifyAccountCode(`resetPassword${args.email}`, args.code)
-			user.password = this.sharedService.hashedPassword(args.password) as string
-			user.isEmailVerified = true
-			await this.adminRepo.update(user.id, { password: user.password, isEmailVerified: user.isEmailVerified })
+			this.sharedService.passwordsVerificatoin(args.password, args.confirmPassword)
+			await this.verifyAccountCode(`setPassword${args.email}`, args.code)
+			admin.password = this.sharedService.hashedPassword(args.password) as string
+			admin.isEmailVerified = true
+			await this.adminRepo.update(admin.id, { password: admin.password, isEmailVerified: admin.isEmailVerified })
 			return this.sharedService.sendResponse(RESPONSE_MESSAGES.PASSWORD_SET)
 
 		} catch (error) {
@@ -158,8 +157,9 @@ export class AdminAccountService {
 		}
 	}
 
-	async changePassword(args: ChangePasswordDTO, admin: Admin) {
+	async changePassword(args: ChangePasswordDTO, user: Admin) {
 		try {
+			const admin = await this.getUserOrThrowException({email: user.email}) as Admin
 			this.logger.log(`Change password request for user: ${admin.id}`)
 			// Validate admin registration type
 			
@@ -168,9 +168,9 @@ export class AdminAccountService {
 				this.exceptionService.sendBadRequestException(RESPONSE_MESSAGES.OLD_AND_NEW_PASSWORD_SHOULD_NOT_SAME)
 			}
 
-			if (!this.sharedService.bcryptCompareVerificatoin(admin.password, args.password)) {
+			if (!this.sharedService.isValidPassword(args.oldPassword, admin.password)) {
 				this.logger.warn('Old password verification failed')
-				this.exceptionService.sendForbiddenException(RESPONSE_MESSAGES.INVALID_PASSWORD)
+				this.exceptionService.sendForbiddenException(RESPONSE_MESSAGES.INVALID_OLD_PASSWORD)
 			}
 
 			if (args.password !== args.confirmPassword) {
@@ -195,9 +195,9 @@ export class AdminAccountService {
 				this.exceptionService.sendForbiddenException(RESPONSE_MESSAGES.ADMIN_ALREADY_EXIST)
 			}
 			const admin: Admin = new Admin(args)
-			admin['password'] = ENV.DEFAULT_USER.PASSWORD
+			admin.password = this.sharedService.hashedPassword(ENV.DEFAULT_USER.PASSWORD) as string
 			await this.adminRepo.insert(admin)
-			const msg = await this.sendSetPasswordCode(args, admin)
+			const msg = await this.sendSetPasswordCode(args, admin) as string
 			// const payload = this.adminService.getPayload(args)
 			// payload['isForSignup'] = true
 			// const token = this.sharedService.getJwt(payload)
@@ -207,7 +207,7 @@ export class AdminAccountService {
 			// if (!isEmailSent) {
 			// 	this.exceptionService.sendUnprocessableEntityException(RESPONSE_MESSAGES.EMAIL_COULD_NOT_BE_SENT)
 			// }
-			return this.sharedService.sendResponse(RESPONSE_MESSAGES.ADMIN_REGISTERED)
+			return this.sharedService.sendResponse(msg)
 		} catch (error) {
 			this.sharedService.sendError(error, this.addAdmin.name)
 		}
@@ -218,7 +218,7 @@ export class AdminAccountService {
 		try {
 			const admin = await this.adminRepo.findOne({where: whereClause})
 			if (!admin) {
-				this.exceptionService.sendNotFoundException(RESPONSE_MESSAGES.ADDRESS_NOT_FOUND)
+				this.exceptionService.sendNotFoundException(RESPONSE_MESSAGES.ADMIN_NOT_FOUND)
 			}
 			return admin
 		} catch (error) {
@@ -258,7 +258,7 @@ export class AdminAccountService {
 				// 	this.exceptionService.sendInternalServerErrorException(ResponseMessagesEnum.EmailResendFailed)
 				// }
 				await this.accountVerificationCache.set(`resetPassword${args.email}`, '123456', 300000) // 5 * 60 * 1000 = 300000 seconds in MILLISECONDS (1000ms = 1s)
-				msg = RESPONSE_MESSAGES.EMAIL_VERIFICATION_CODE_SENT
+				msg = RESPONSE_MESSAGES.EMAIL_RESEND_CODE
 			} else {
 				// Currently using a default verification code for all phone numbers.
 				// Will implement random code generation and validation in the future.
@@ -291,7 +291,7 @@ export class AdminAccountService {
                 // 	this.exceptionService.sendInternalServerErrorException(ResponseMessagesEnum.VerificationCodeFailed)
                 // }
                 await this.accountVerificationCache.set(`setPassword${args.email}`, '123456', 300000) // 5 * 60 * 1000 = 300000 seconds in MILLISECONDS (1000ms = 1s)
-                msg = RESPONSE_MESSAGES.EMAIL_VERIFICATION_CODE_SENT
+				msg = RESPONSE_MESSAGES.EMAIL_VERIFICATION_CODE_SENT
             } else {
 				// TODO: if we support phone number in future
 				msg = RESPONSE_MESSAGES.PHONE_NUMBER_NOT_SUPPORTED

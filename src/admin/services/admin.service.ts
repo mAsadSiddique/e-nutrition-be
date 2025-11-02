@@ -74,7 +74,7 @@ export class AdminService {
 			}
 			adminMember.role = args.role
 			await this.adminRepo.save(adminMember)
-			return this.sharedService.sendResponse(RESPONSE_MESSAGES.UPDATED)
+			return this.sharedService.sendResponse(RESPONSE_MESSAGES.ADMIN_ROLE_UPDATED, {admin: adminMember})
 		} catch (error) {
 			this.sharedService.sendError(error, this.updateAdminRole.name)
 		}
