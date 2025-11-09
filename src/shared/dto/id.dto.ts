@@ -6,14 +6,14 @@ export class IdDTO {
 	@ApiProperty({
 		description: 'id',
 		type: String,
-		example: '507f1f77bcf86cd799439011',
+		example: 1,
 		required: true
 	})
 	@IsNotEmpty()
-	@IsMongoId({
-		message: 'id must be a valid 24-character hex MongoDB ObjectId',
-	})
-	id: string
+	@Type(() => Number)
+	@IsPositive()
+	@IsInt()
+	id: number
 }
 
 export class ParamIdDTO {

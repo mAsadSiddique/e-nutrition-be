@@ -7,6 +7,7 @@ import { SharedModule } from './shared/shared.module';
 import { AuthModule } from './auth/auth.module';
 import { AdminModule } from './admin/admin.module';
 import { CacheModule } from '@nestjs/cache-manager';
+import { CategoryModule } from './category/category.module';
 
 @Module({
   imports: [
@@ -20,7 +21,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 			charset: 'utf8mb4',
 			synchronize: false, // This should always be false, if you want to add , then please do through migration
 			logging: false,
-      autoLoadEntities: true,
+			autoLoadEntities: true,
 		}),
 	CacheModule.register({
 		isGlobal: true, // Makes the cache available across the entire app
@@ -29,7 +30,8 @@ import { CacheModule } from '@nestjs/cache-manager';
 	}),
     AdminModule,
     SharedModule,
-    AuthModule
+    AuthModule,
+	CategoryModule
   ],
   controllers: [AppController],
   providers: [AppService],

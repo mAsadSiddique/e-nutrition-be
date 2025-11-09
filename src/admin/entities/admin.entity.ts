@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger'
 import { Roles } from '../../utils/enums/roles.enum'
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm'
 
-@Entity()
+@Entity('admin')
 export class Admin {
 	@PrimaryGeneratedColumn()
 	id: number

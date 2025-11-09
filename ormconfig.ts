@@ -12,9 +12,12 @@ const dataSource = new DataSource({
 	charset: 'utf8mb4',
 	synchronize: false,
 	logging: false,
-	entities: [Admin], // Add other entities here as needed
-	migrations: ['src/migration/**/*.ts'],
-	migrationsTableName: 'migrations',
+	entities: [
+		'dist/**/*.entity.js'
+	],
+	migrations: [
+		'src/migration/**/*.ts'
+	],
 });
 
 export default dataSource;

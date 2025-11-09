@@ -93,6 +93,7 @@ export enum RESPONSE_MESSAGES {
 	CATEGORY_DELETED = 'category deleted successfully',
 	CATEGORY_HAS_CHILD = `category can't deleted until it has subcategory`,
 	CATEGORIES_LISTING = 'categories are listed below',
+	CATEGORY_ALREADY_EXIST_WITH_NAME = 'Category already exist with the same name',
 
 	// images
 	IMAGE_REQUIRED = 'atleast one image is required',
