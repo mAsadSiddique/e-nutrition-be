@@ -569,4 +569,27 @@ export class SharedService {
 			this.exceptionService.sendUnauthorizedException(errorMessage)
 		}
 	}
+
+		/**
+	 * Generates a random alphanumeric string of the given length using
+	 * cryptographically secure random bytes.
+	 *
+	 * Note: Uniqueness is not guaranteed. For unique values, add a check (e.g., DB or memory).
+	 *
+	 * @param length - Length of the string to generate.
+	 * @returns A random alphanumeric string.
+	 */
+	generateRandomString(length: number): string {
+		const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+		let result = ''
+
+		// Generate random bytes and map them to the chars array
+		const bytes = crypto.randomBytes(length)
+		for (let i = 0; i < length; i++) {
+			const index = bytes[i] % chars.length
+			result += chars[index]
+		}
+
+		return result
+	}
 }

@@ -47,5 +47,17 @@ export const envValidationSchema = z.object({
 	// Logout routes (optional)
 	ADMIN_LOGOUT_ROUTE: z.string().optional(),
 	USER_LOGOUT_ROUTE: z.string().optional(),
+
+		// Google login credentials
+	GOOGLE_CLIENT_ID: z.string(),
+	GOOGLE_SECRET: z.string(),
+	GOOGLE_REDIRECT_URL: z.string(),
+	GOOGLE_CANCEL_REDIRECT_URL: z.string(),
+
+	// fe redirect pages
+	USER_EMAIL_VERIFICATION_PAGE: z.string().url(),
+	USER_RESET_PASSWORD_PAGE: z.string().url(),
+	USER_SET_PASSWORD_PAGE: z.string().url(),
+	SOCIAL_MEDIA_REDIRECT_URL: z.string()
 	
 })

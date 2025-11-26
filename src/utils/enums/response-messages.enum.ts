@@ -8,8 +8,8 @@ export enum RESPONSE_MESSAGES {
 	USER_REGISTERED_WITH_ASAAN = 'user registered successfully. please login to continue',
 	USER_REGISTRATION_FAILED = 'user registration failed. please try again later',
 	USER_REGISTERED_EMAIL_VERIFICATION_FAILED = 'User registered successfully but email verification failed',
-	USER_ALREADY_EXIST = 'user already registered with this email',
-	USER_ALREADY_EXIST_WITH_NUMBER = 'user already registered with this phone number ',
+	USER_EMAIL_ALREADY_EXIST = 'user already registered with this email',
+	USER_PHONE_ALREADY_EXIST = 'user already registered with this phone number ',
 	USER_NOT_FOUND = 'user not found',
 	USER_BLOCKED = 'you are blocked kindly contact to the support',
 	INVALID_USER_ID = 'Invalid user id',
@@ -20,6 +20,13 @@ export enum RESPONSE_MESSAGES {
 	USER_LISTING = 'users listed below',
 	REGISTERED_WITH_OTHER_METHOD = 'you are not registered with email and password, please try with other method or signup',
 	SOCIAL_MEDIA_LOGIN_FAIL = 'social media login failed',
+	UserVerificationPending = 'Please verify your account to continue. We have sent a verification code to your registered contact information.',
+	UsernameAlreadyExist = 'This username is already linked to an existing account',
+	RegisteredNotWithThisMethod = 'You are not registered with email/phone and password, please try alternate method or signup',
+	UserPasswordReset = 'User password reset successfully',
+	UserAlreadyExist = 'User already exist',
+
+
 
 	// Admin
 	ADMIN_REGISTERED = 'admin registered successfully',
@@ -46,6 +53,8 @@ export enum RESPONSE_MESSAGES {
 	CANT_CHANGE_PASSWORD = `you are advised to go for set password`,
 	OLD_AND_NEW_PASSWORD_SHOULD_NOT_SAME = `New and old password can't be same `,
 	INVALID_OLD_PASSWORD = 'Invalid old password',
+	UserPasswordUpdated = 'User password updated successfully',
+
 	// CANT_CHANGE_PASSWORD = `you can't change password until your are registered with email and password`,
 
 
@@ -63,9 +72,15 @@ export enum RESPONSE_MESSAGES {
 	EMAIL_RESEND = 'email resend successfully',
 	EMAIL_RESEND_FAILED = 'email resend failed, please try again',
 	EMAIL_COULD_NOT_BE_SENT = 'email sending failed, please try again after 5 minutes',
+	EmailVerificationCodeSent = 'Verification code sent successfully. Please check your email to verify your account.',
+	EmailVerificationPending = 'Please verify your email address. Check your inbox for the verification code.',
+	EmailResetCodeSent = 'Reset password code sent to your email, please check your inbox',
 
 	// Phone Number
-	PHONE_NUMBER_ALREADY_EXIST = 'phone number is already registered with other account',
+	PhoneVerificationCodeSent = 'Verification code sent successfully. Please check your messages to verify your account.',
+	UserPhoneNumAlreadyVerified = 'User phone number already verified successfully',
+	PhoneVerificationPending = 'Please verify your phone number. Check your messages for the verification code.',
+	PhoneResetCodeSent = 'Reset password code sent to your phone, please check your messages',
 
 	// JWt
 	JWT_EXPIRED = 'your login session is expired, please login again',

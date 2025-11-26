@@ -5,6 +5,8 @@ export type UserSocialLoginType = {
 	username?: string
 	email?: string
 	password?: string
+	phoneNumber?: string
+	profileImage?: {}
 }
 
 
