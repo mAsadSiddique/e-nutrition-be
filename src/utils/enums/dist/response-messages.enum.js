@@ -10,8 +10,8 @@ var RESPONSE_MESSAGES;
     RESPONSE_MESSAGES["USER_REGISTERED_WITH_ASAAN"] = "user registered successfully. please login to continue";
     RESPONSE_MESSAGES["USER_REGISTRATION_FAILED"] = "user registration failed. please try again later";
     RESPONSE_MESSAGES["USER_REGISTERED_EMAIL_VERIFICATION_FAILED"] = "User registered successfully but email verification failed";
-    RESPONSE_MESSAGES["USER_ALREADY_EXIST"] = "user already registered with this email";
-    RESPONSE_MESSAGES["USER_ALREADY_EXIST_WITH_NUMBER"] = "user already registered with this phone number ";
+    RESPONSE_MESSAGES["USER_EMAIL_ALREADY_EXIST"] = "user already registered with this email";
+    RESPONSE_MESSAGES["USER_PHONE_ALREADY_EXIST"] = "user already registered with this phone number ";
     RESPONSE_MESSAGES["USER_NOT_FOUND"] = "user not found";
     RESPONSE_MESSAGES["USER_BLOCKED"] = "you are blocked kindly contact to the support";
     RESPONSE_MESSAGES["INVALID_USER_ID"] = "Invalid user id";
@@ -22,6 +22,11 @@ var RESPONSE_MESSAGES;
     RESPONSE_MESSAGES["USER_LISTING"] = "users listed below";
     RESPONSE_MESSAGES["REGISTERED_WITH_OTHER_METHOD"] = "you are not registered with email and password, please try with other method or signup";
     RESPONSE_MESSAGES["SOCIAL_MEDIA_LOGIN_FAIL"] = "social media login failed";
+    RESPONSE_MESSAGES["UserVerificationPending"] = "Please verify your account to continue. We have sent a verification code to your registered contact information.";
+    RESPONSE_MESSAGES["UsernameAlreadyExist"] = "This username is already linked to an existing account";
+    RESPONSE_MESSAGES["RegisteredNotWithThisMethod"] = "You are not registered with email/phone and password, please try alternate method or signup";
+    RESPONSE_MESSAGES["UserPasswordReset"] = "User password reset successfully";
+    RESPONSE_MESSAGES["UserAlreadyExist"] = "User already exist";
     // Admin
     RESPONSE_MESSAGES["ADMIN_REGISTERED"] = "admin registered successfully";
     RESPONSE_MESSAGES["ADMIN_ALREADY_EXIST"] = "admin already registered with this email";
@@ -47,6 +52,7 @@ var RESPONSE_MESSAGES;
     RESPONSE_MESSAGES["CANT_CHANGE_PASSWORD"] = "you are advised to go for set password";
     RESPONSE_MESSAGES["OLD_AND_NEW_PASSWORD_SHOULD_NOT_SAME"] = "New and old password can't be same ";
     RESPONSE_MESSAGES["INVALID_OLD_PASSWORD"] = "Invalid old password";
+    RESPONSE_MESSAGES["UserPasswordUpdated"] = "User password updated successfully";
     // CANT_CHANGE_PASSWORD = `you can't change password until your are registered with email and password`,
     // Self
     RESPONSE_MESSAGES["SELF_BLOCKING_NOT_ALLOWED"] = "self blocking not allowed";
@@ -61,8 +67,14 @@ var RESPONSE_MESSAGES;
     RESPONSE_MESSAGES["EMAIL_RESEND"] = "email resend successfully";
     RESPONSE_MESSAGES["EMAIL_RESEND_FAILED"] = "email resend failed, please try again";
     RESPONSE_MESSAGES["EMAIL_COULD_NOT_BE_SENT"] = "email sending failed, please try again after 5 minutes";
+    RESPONSE_MESSAGES["EmailVerificationCodeSent"] = "Verification code sent successfully. Please check your email to verify your account.";
+    RESPONSE_MESSAGES["EmailVerificationPending"] = "Please verify your email address. Check your inbox for the verification code.";
+    RESPONSE_MESSAGES["EmailResetCodeSent"] = "Reset password code sent to your email, please check your inbox";
     // Phone Number
-    RESPONSE_MESSAGES["PHONE_NUMBER_ALREADY_EXIST"] = "phone number is already registered with other account";
+    RESPONSE_MESSAGES["PhoneVerificationCodeSent"] = "Verification code sent successfully. Please check your messages to verify your account.";
+    RESPONSE_MESSAGES["UserPhoneNumAlreadyVerified"] = "User phone number already verified successfully";
+    RESPONSE_MESSAGES["PhoneVerificationPending"] = "Please verify your phone number. Check your messages for the verification code.";
+    RESPONSE_MESSAGES["PhoneResetCodeSent"] = "Reset password code sent to your phone, please check your messages";
     // JWt
     RESPONSE_MESSAGES["JWT_EXPIRED"] = "your login session is expired, please login again";
     RESPONSE_MESSAGES["INVALID_SIGNATURE"] = "invalid verification signature";

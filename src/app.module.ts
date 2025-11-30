@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { AdminModule } from './admin/admin.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { CategoryModule } from './category/category.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -31,7 +32,8 @@ import { CategoryModule } from './category/category.module';
     AdminModule,
     SharedModule,
     AuthModule,
-	CategoryModule
+	CategoryModule,
+	UserModule
   ],
   controllers: [AppController],
   providers: [AppService],

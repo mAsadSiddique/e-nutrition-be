@@ -8,6 +8,10 @@ import {
 	BadRequestException,
 	ForbiddenException,
 	UnauthorizedException,
+	GoneException,
+	HttpException,
+	HttpStatus,
+	UnsupportedMediaTypeException,
 } from '@nestjs/common'
 
 @Injectable()
@@ -42,5 +46,24 @@ export class ExceptionService {
 
 	sendUnauthorizedException(message: string): never {
 		throw new UnauthorizedException(message)
+	}
+
+	sendUnsupportedMediaTypeException(message: string): never {
+		throw new UnsupportedMediaTypeException(message)
+	}
+
+	sendGoneException(message: string): never {
+		throw new GoneException(message)
+	}
+
+	sendTooManyRequestsException(message: string): never {
+		throw new HttpException(
+			{
+				message: message,
+				error: 'Too Many Requests',
+				statusCode: HttpStatus.TOO_MANY_REQUESTS,
+			},
+			HttpStatus.TOO_MANY_REQUESTS
+		)
 	}
 }

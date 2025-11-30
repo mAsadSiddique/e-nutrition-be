@@ -4,6 +4,7 @@ import { AdminAuthGuard } from './guard/admin_auth.guard';
 import { AdminAuthService } from './guard/admin_auth.service';
 import { SharedModule } from 'src/shared/shared.module';
 import { ENV } from 'src/config/constant'
+import { UserAuthService } from './guard/user_auth.service';
 
 @Module({
 	imports: [
@@ -14,7 +15,7 @@ import { ENV } from 'src/config/constant'
 			signOptions: {expiresIn: '1d'},
 		}),
 	],
-	providers: [AdminAuthGuard , AdminAuthService],
-	exports: [AdminAuthGuard, AdminAuthService],
+	providers: [AdminAuthGuard , AdminAuthService, UserAuthService],
+	exports: [AdminAuthGuard, AdminAuthService, UserAuthService],
 })
 export class AuthModule {}
