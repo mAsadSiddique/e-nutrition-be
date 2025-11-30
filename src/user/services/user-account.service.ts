@@ -757,7 +757,7 @@ export class UserAccountService {
 			this.logger.debug(`Verification code generated for user : ${args.email}`)
 			if (args.email) {
 				// Use consolidated cache management
-				await this.verifyAndSetCacheData(`verify${args.email}`)
+				await this.verifyAndSetCacheData(`resetPassword${args.email}`)
 
 				// send an email to user for account verification
 				// TODO: Will send email verification code dynamically after settting up sendgrid templates
@@ -768,7 +768,7 @@ export class UserAccountService {
 				msg = RESPONSE_MESSAGES.EmailResetCodeSent
 			} else {
 				// Use consolidated cache management
-				await this.verifyAndSetCacheData(`verify${args.phoneNumber}`)
+				await this.verifyAndSetCacheData(`resetPassword${args.phoneNumber}`)
 				msg = RESPONSE_MESSAGES.PhoneResetCodeSent
 			}
 			return msg

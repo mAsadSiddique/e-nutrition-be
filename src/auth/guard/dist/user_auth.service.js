@@ -55,7 +55,7 @@ var UserAuthService = /** @class */ (function () {
         this.logger = new common_1.Logger(UserAuthService_1.name);
     }
     UserAuthService_1 = UserAuthService;
-    UserAuthService.prototype.getUserByUsername = function (email) {
+    UserAuthService.prototype.getUserByUsername = function (username) {
         return __awaiter(this, void 0, void 0, function () {
             var error_1;
             return __generator(this, function (_a) {
@@ -63,7 +63,7 @@ var UserAuthService = /** @class */ (function () {
                     case 0:
                         _a.trys.push([0, 2, , 3]);
                         return [4 /*yield*/, this.dataSource.getRepository(user_entity_1.User).findOne({
-                                where: { email: email },
+                                where: { username: username },
                                 select: {
                                     id: true,
                                     username: true,

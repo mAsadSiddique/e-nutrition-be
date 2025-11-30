@@ -16,10 +16,10 @@ export class UserAuthService {
 		private readonly exceptionService: ExceptionService
 	) {}
 
-	async getUserByUsername(email: string) {
+	async getUserByUsername(username: string) {
 		try {
 			return await this.dataSource.getRepository(User).findOne({
-				where: {email},
+				where: {username},
 				select: {
 					id: true,
 					username: true,

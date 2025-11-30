@@ -956,7 +956,7 @@ var UserAccountService = /** @class */ (function () {
                         this.logger.debug("Verification code generated for user : " + args.email);
                         if (!args.email) return [3 /*break*/, 2];
                         // Use consolidated cache management
-                        return [4 /*yield*/, this.verifyAndSetCacheData("verify" + args.email)
+                        return [4 /*yield*/, this.verifyAndSetCacheData("resetPassword" + args.email)
                             // send an email to user for account verification
                             // TODO: Will send email verification code dynamically after settting up sendgrid templates
                             // const iscodeSent = await Mailer.sendForgotPasswordCode(args.email, code, 5) // code expiry time is 5 minute
@@ -977,7 +977,7 @@ var UserAccountService = /** @class */ (function () {
                         return [3 /*break*/, 4];
                     case 2: 
                     // Use consolidated cache management
-                    return [4 /*yield*/, this.verifyAndSetCacheData("verify" + args.phoneNumber)];
+                    return [4 /*yield*/, this.verifyAndSetCacheData("resetPassword" + args.phoneNumber)];
                     case 3:
                         // Use consolidated cache management
                         _a.sent();
