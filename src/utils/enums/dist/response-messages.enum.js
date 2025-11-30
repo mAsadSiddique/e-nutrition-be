@@ -125,4 +125,18 @@ var RESPONSE_MESSAGES;
     // Verifications
     RESPONSE_MESSAGES["CODE_EXPIRED"] = "Your code has expired. Please request a new code to continue.";
     RESPONSE_MESSAGES["INVALID_CODE"] = "The code you entered is invalid. Please check and try again.";
+    // Blog
+    RESPONSE_MESSAGES["BLOG_CREATED"] = "Blog created successfully";
+    RESPONSE_MESSAGES["BLOG_NOT_FOUND"] = "Blog not found";
+    RESPONSE_MESSAGES["BLOG_UPDATED"] = "Blog updated successfully";
+    RESPONSE_MESSAGES["BLOG_DELETED"] = "Blog deleted successfully";
+    RESPONSE_MESSAGES["BLOG_PUBLISHED"] = "Blog published successfully";
+    RESPONSE_MESSAGES["BLOG_LISTING"] = "Blogs listed below";
+    RESPONSE_MESSAGES["BLOG_SLUG_ALREADY_EXIST"] = "Blog with this slug already exists";
+    RESPONSE_MESSAGES["CATEGORY_REQUIRED_FOR_BLOG"] = "Category is required before publishing the blog";
+    RESPONSE_MESSAGES["BLOG_CANNOT_BE_PUBLISHED_WITHOUT_CATEGORY"] = "Blog cannot be published without selecting a category";
+    // User Categories
+    RESPONSE_MESSAGES["CATEGORIES_SELECTED"] = "Categories selected successfully";
+    RESPONSE_MESSAGES["USER_CATEGORIES_UPDATED"] = "User categories updated successfully";
+    RESPONSE_MESSAGES["USER_CATEGORIES_LISTING"] = "User selected categories listed below";
 })(RESPONSE_MESSAGES = exports.RESPONSE_MESSAGES || (exports.RESPONSE_MESSAGES = {}));

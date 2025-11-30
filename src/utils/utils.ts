@@ -63,6 +63,27 @@ export const imageFileFilter = (req: Request, file: Express.Multer.File, callbac
 	callback(undefined as any, true)
 }
 
+export const videoFileFilter = (req: Request, file: Express.Multer.File, callback: callbackType) => {
+	if (!file.originalname.match(/\.(mp4|avi|mov|wmv|flv|webm|MP4|AVI|MOV|WMV|FLV|WEBM)$/)) {
+		return callback(new BadRequestException('only video files like .mp4,avi,mov,wmv,flv,webm are allowed'), false)
+	}
+	callback(undefined as any, true)
+}
+
+/**
+ * Generate a URL-friendly slug from a string
+ * @param text - The text to convert to a slug
+ * @returns A URL-friendly slug
+ */
+export function generateSlug(text: string): string {
+	return text
+		.toLowerCase()
+		.trim()
+		.replace(/[^\w\s-]/g, '') // Remove special characters
+		.replace(/[\s_-]+/g, '-') // Replace spaces, underscores, and hyphens with single hyphen
+		.replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
+}
+
 /**
  * This function takes stringify boolean or number string and convert it to boolean value
  * used in case of form data

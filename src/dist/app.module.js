@@ -18,6 +18,7 @@ var admin_module_1 = require("./admin/admin.module");
 var cache_manager_1 = require("@nestjs/cache-manager");
 var category_module_1 = require("./category/category.module");
 var user_module_1 = require("./user/user.module");
+// import { BlogModule } from './blog/blog.module';
 var AppModule = /** @class */ (function () {
     function AppModule() {
     }
@@ -45,7 +46,7 @@ var AppModule = /** @class */ (function () {
                 shared_module_1.SharedModule,
                 auth_module_1.AuthModule,
                 category_module_1.CategoryModule,
-                user_module_1.UserModule
+                user_module_1.UserModule,
             ],
             controllers: [app_controller_1.AppController],
             providers: [app_service_1.AppService]
