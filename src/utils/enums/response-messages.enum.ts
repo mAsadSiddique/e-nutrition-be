@@ -139,4 +139,21 @@ export enum RESPONSE_MESSAGES {
 	// Verifications
 	CODE_EXPIRED = 'Your code has expired. Please request a new code to continue.',
 	INVALID_CODE = 'The code you entered is invalid. Please check and try again.',
+
+	// Blog
+	BLOG_CREATED = 'Blog created successfully',
+	BLOG_NOT_FOUND = 'Blog not found',
+	BLOG_UPDATED = 'Blog updated successfully',
+	BLOG_DELETED = 'Blog deleted successfully',
+	BLOG_PUBLISHED = 'Blog published successfully',
+	BLOG_UNPUBLISHED = 'Blog unpublished successfully',
+	BLOG_LISTING = 'Blogs listed below',
+	BLOG_SLUG_ALREADY_EXIST = 'Blog with this slug already exists',
+	CATEGORY_REQUIRED_FOR_BLOG = 'At least one category is required before publishing the blog',
+	BLOG_CANNOT_BE_PUBLISHED_WITHOUT_CATEGORY = 'Blog cannot be published without selecting at least one category',
+
+	// User Categories
+	CATEGORIES_SELECTED = 'Categories selected successfully',
+	USER_CATEGORIES_UPDATED = 'User categories updated successfully',
+	USER_CATEGORIES_LISTING = 'User selected categories listed below',
 }

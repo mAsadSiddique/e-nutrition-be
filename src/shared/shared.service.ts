@@ -6,10 +6,12 @@ import { getWasabiS3Object } from '../utils/utils'
 import * as crypto from 'crypto'
 import { PreviewableFileType } from '../utils/types/previewable_file.type'
 import { ObjectType } from '../utils/types/generic_types.type'
-
+import  sharp from 'sharp'
 import { BucketParamType } from 'src/utils/types/bucket-param.type'
 import { ENV } from 'src/config/constant'
 import { RESPONSE_MESSAGES } from 'src/utils/enums/response-messages.enum'
+import { DimDTO, ImgDimDTO } from 'src/blog/dtos/dim.dto'
+import { S3 } from 'aws-sdk'
 
 /**
  * JWT error message mapping
@@ -20,6 +22,17 @@ const JWT_ERRORS = {
 	'jwt expired': RESPONSE_MESSAGES.JWT_EXPIRED,
 	'invalid signature': RESPONSE_MESSAGES.INVALID_SIGNATURE,
 }
+
+/**
+ * Image compression constants
+ */
+const IMAGE_CONSTANTS = {
+	COMPRESSION_THRESHOLD: 25600, // bytes
+	MAX_HEIGHT: 1200,
+	MAX_WIDTH: 900,
+	JPEG_QUALITY: 60,
+}
+
 
 @Injectable()
 export class SharedService {
@@ -591,5 +604,149 @@ export class SharedService {
 		}
 
 		return result
+	}
+
+	async uploadMultipleFileToS3Bucket(mediaFiles: Array<Express.Multer.File> | {[key: string]: Express.Multer.File[]}, dims: ImgDimDTO | undefined, isCompressable = true) {
+		try {
+			const requests: Promise<S3.PutObjectOutput>[] = []
+			const keys = {}
+			for (const [objKey, files] of Object.entries(mediaFiles)) {
+				for (const file of files) {
+					const mimetype = file.mimetype.split('/')[0]
+
+					const key = `${objKey}__${(Date.now() + file.originalname).replace(/\s+/g, '')}`
+					
+					keys[key] = objKey
+					let compressedData: Buffer
+					if (['video', 'videos', 'audio'].includes(mimetype)) {
+						// TODO: will implement video compression logic
+						compressedData = file.buffer
+					} else {
+						compressedData = isCompressable ? await this.compressImageData(file.buffer, dims && dims[objKey]) : file.buffer
+					}
+					if (!compressedData) continue
+					const param = {
+						Body: compressedData,
+						Bucket: ENV.S3_BUCKET.NAME,
+						Key: key,
+					}
+					requests.push(this.s3.putObject(param).promise())
+				}
+			}
+			await Promise.all(requests)
+			return keys
+		} catch (error) {
+			throw error
+		}
+	}
+
+	async getMultipleFilesFromS3Bucket(keysWithValue: Record<string, string>): Promise<Record<string, string>> {
+		try {
+			const requests: Promise<string>[] = []
+			const urlsToBeReturn: ObjectType = {}
+
+			// Create signed URL requests for each file key
+			for (const [key, value] of Object.entries(keysWithValue)) {
+				const param = {
+					Bucket: ENV.S3_BUCKET.NAME,
+					Key: key,
+					Expires: 604800, // 7 days in seconds
+				}
+				requests.push(Promise.resolve(this.s3.getSignedUrl('getObject', param))) // Wrap in Promise for consistency
+			}
+
+			// Resolve all signed URLs
+			const urls = await Promise.all(requests)
+
+			// Map signed URLs back to their original keys
+			let counter = 0
+			for (const key of Object.keys(keysWithValue)) {
+				urlsToBeReturn[key] = urls[counter]
+				counter++
+			}
+			return urlsToBeReturn
+		} catch (error) {
+			this.exceptionService.sendNotFoundException(RESPONSE_MESSAGES.IMAGE_NOT_FOUND)
+		}
+	}
+
+	/**
+	 * Compresses an image buffer with optional dimension constraints
+	 *
+	 * Uses the sharp library to resize and compress images above the threshold size
+	 *
+	 * @param data - Image buffer
+	 * @param dim - Optional dimension constraints (width and height)
+	 * @returns Promise resolving to the compressed image buffer
+	 */
+	private async compressImageData(data: Buffer, dim?: DimDTO): Promise<Buffer> {
+		const startSize = data.length
+		this.logger.debug(`Compressing image, original size: ${startSize} bytes`)
+
+		// Return original if below threshold and no dimensions provided
+		if (startSize <= IMAGE_CONSTANTS.COMPRESSION_THRESHOLD && (!dim || !dim.height || !dim.width)) {
+			this.logger.debug('Image below compression threshold, returning original')
+			return data
+		}
+
+		try {
+			// Process image with dimensions if provided
+			if (dim && dim.height && dim.width) {
+				return await this.resizeAndCompressImage(data, dim.width, dim.height)
+			}
+
+			// Basic compression without resizing
+			const compressed = await sharp(data).jpeg({quality: IMAGE_CONSTANTS.JPEG_QUALITY}).withMetadata().toBuffer()
+
+			this.logger.debug(`Image compressed from ${startSize} to ${compressed.length} bytes`)
+			return compressed
+		} catch (error) {
+			this.logger.error(`Image compression failed: ${error}`)
+			// Return original data if compression fails
+			return data
+		}
+	}
+
+	/**
+	 * Resizes and compresses an image based on target dimensions
+	 *
+	 * Maintains aspect ratio while fitting within maximum dimensions
+	 *
+	 * @param data - Image buffer
+	 * @param width - Original width
+	 * @param height - Original height
+	 * @returns Promise resolving to the resized and compressed image
+	 */
+	private async resizeAndCompressImage(data: Buffer, width: number, height: number): Promise<Buffer> {
+		const {MAX_HEIGHT, MAX_WIDTH, JPEG_QUALITY} = IMAGE_CONSTANTS
+
+		// Calculate new dimensions while preserving aspect ratio
+		let newWidth = width
+		let newHeight = height
+		const aspectRatio = width / height
+		const maxAspectRatio = MAX_WIDTH / MAX_HEIGHT
+
+		if (height > MAX_HEIGHT || width > MAX_WIDTH) {
+			if (aspectRatio < maxAspectRatio) {
+				// Height limited by MAX_HEIGHT
+				const ratio = MAX_HEIGHT / height
+				newWidth = Math.round(ratio * width)
+				newHeight = MAX_HEIGHT
+			} else {
+				// Width limited by MAX_WIDTH
+				const ratio = MAX_WIDTH / width
+				newHeight = Math.round(ratio * height)
+				newWidth = MAX_WIDTH
+			}
+		}
+
+		this.logger.debug(`Resizing image from ${width}x${height} to ${newWidth}x${newHeight}`)
+
+		try {
+			return await sharp(data).jpeg({quality: JPEG_QUALITY}).resize(newWidth, newHeight, {fit: 'outside'}).withMetadata().toBuffer()
+		} catch (error) {
+			this.logger.error(`Image resize failed: ${error}`)
+			throw error
+		}
 	}
 }

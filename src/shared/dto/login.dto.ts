@@ -1,6 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger'
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import { Transform } from 'class-transformer'
-import { IsNotEmpty, IsEmail, Length } from 'class-validator'
+import { IsNotEmpty, IsEmail, Length, ValidateIf, IsPhoneNumber, IsOptional } from 'class-validator'
 
 export class LoginDTO {
 	@ApiProperty({
@@ -12,6 +12,15 @@ export class LoginDTO {
 	@IsEmail()
 	@Transform((email) => email.value.toLowerCase())
 	email: string
+
+	@ApiPropertyOptional({
+		description: 'Signup with phone number',
+		nullable: true,
+		example: '+923087510404',
+	})
+	@IsOptional()
+	@IsPhoneNumber(undefined, {message: 'phone number must be correct phone number and also contain country code'})
+	phoneNumber!: string
 
 	@ApiProperty({
 		description: 'user’s password',

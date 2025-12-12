@@ -48,6 +48,7 @@ var bcrypt = require("bcrypt");
 var jwt = require("jsonwebtoken");
 var utils_1 = require("../utils/utils");
 var crypto = require("crypto");
+var sharp_1 = require("sharp");
 var constant_1 = require("src/config/constant");
 var response_messages_enum_1 = require("src/utils/enums/response-messages.enum");
 /**
@@ -58,6 +59,15 @@ var JWT_ERRORS = {
     'jwt malformed': response_messages_enum_1.RESPONSE_MESSAGES.JWT_INVALID,
     'jwt expired': response_messages_enum_1.RESPONSE_MESSAGES.JWT_EXPIRED,
     'invalid signature': response_messages_enum_1.RESPONSE_MESSAGES.INVALID_SIGNATURE
+};
+/**
+ * Image compression constants
+ */
+var IMAGE_CONSTANTS = {
+    COMPRESSION_THRESHOLD: 25600,
+    MAX_HEIGHT: 1200,
+    MAX_WIDTH: 900,
+    JPEG_QUALITY: 60
 };
 var SharedService = /** @class */ (function () {
     function SharedService(exceptionService) {
@@ -719,6 +729,205 @@ var SharedService = /** @class */ (function () {
             result += chars[index];
         }
         return result;
+    };
+    SharedService.prototype.uploadMultipleFileToS3Bucket = function (mediaFiles, dims, isCompressable) {
+        if (isCompressable === void 0) { isCompressable = true; }
+        return __awaiter(this, void 0, void 0, function () {
+            var requests, keys, _i, _a, _b, objKey, files, _c, files_2, file, mimetype, key, compressedData, _d, param, error_11;
+            return __generator(this, function (_e) {
+                switch (_e.label) {
+                    case 0:
+                        _e.trys.push([0, 12, , 13]);
+                        requests = [];
+                        keys = {};
+                        _i = 0, _a = Object.entries(mediaFiles);
+                        _e.label = 1;
+                    case 1:
+                        if (!(_i < _a.length)) return [3 /*break*/, 10];
+                        _b = _a[_i], objKey = _b[0], files = _b[1];
+                        _c = 0, files_2 = files;
+                        _e.label = 2;
+                    case 2:
+                        if (!(_c < files_2.length)) return [3 /*break*/, 9];
+                        file = files_2[_c];
+                        mimetype = file.mimetype.split('/')[0];
+                        key = objKey + "__" + (Date.now() + file.originalname).replace(/\s+/g, '');
+                        keys[key] = objKey;
+                        compressedData = void 0;
+                        if (!['video', 'videos', 'audio'].includes(mimetype)) return [3 /*break*/, 3];
+                        // TODO: will implement video compression logic
+                        compressedData = file.buffer;
+                        return [3 /*break*/, 7];
+                    case 3:
+                        if (!isCompressable) return [3 /*break*/, 5];
+                        return [4 /*yield*/, this.compressImageData(file.buffer, dims && dims[objKey])];
+                    case 4:
+                        _d = _e.sent();
+                        return [3 /*break*/, 6];
+                    case 5:
+                        _d = file.buffer;
+                        _e.label = 6;
+                    case 6:
+                        compressedData = _d;
+                        _e.label = 7;
+                    case 7:
+                        if (!compressedData)
+                            return [3 /*break*/, 8];
+                        param = {
+                            Body: compressedData,
+                            Bucket: constant_1.ENV.S3_BUCKET.NAME,
+                            Key: key
+                        };
+                        requests.push(this.s3.putObject(param).promise());
+                        _e.label = 8;
+                    case 8:
+                        _c++;
+                        return [3 /*break*/, 2];
+                    case 9:
+                        _i++;
+                        return [3 /*break*/, 1];
+                    case 10: return [4 /*yield*/, Promise.all(requests)];
+                    case 11:
+                        _e.sent();
+                        return [2 /*return*/, keys];
+                    case 12:
+                        error_11 = _e.sent();
+                        throw error_11;
+                    case 13: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    SharedService.prototype.getMultipleFilesFromS3Bucket = function (keysWithValue) {
+        return __awaiter(this, void 0, Promise, function () {
+            var requests, urlsToBeReturn, _i, _a, _b, key, value, param, urls, counter, _c, _d, key, error_12;
+            return __generator(this, function (_e) {
+                switch (_e.label) {
+                    case 0:
+                        _e.trys.push([0, 2, , 3]);
+                        requests = [];
+                        urlsToBeReturn = {};
+                        // Create signed URL requests for each file key
+                        for (_i = 0, _a = Object.entries(keysWithValue); _i < _a.length; _i++) {
+                            _b = _a[_i], key = _b[0], value = _b[1];
+                            param = {
+                                Bucket: constant_1.ENV.S3_BUCKET.NAME,
+                                Key: key,
+                                Expires: 604800
+                            };
+                            requests.push(Promise.resolve(this.s3.getSignedUrl('getObject', param))); // Wrap in Promise for consistency
+                        }
+                        return [4 /*yield*/, Promise.all(requests)
+                            // Map signed URLs back to their original keys
+                        ];
+                    case 1:
+                        urls = _e.sent();
+                        counter = 0;
+                        for (_c = 0, _d = Object.keys(keysWithValue); _c < _d.length; _c++) {
+                            key = _d[_c];
+                            urlsToBeReturn[key] = urls[counter];
+                            counter++;
+                        }
+                        return [2 /*return*/, urlsToBeReturn];
+                    case 2:
+                        error_12 = _e.sent();
+                        this.exceptionService.sendNotFoundException(response_messages_enum_1.RESPONSE_MESSAGES.IMAGE_NOT_FOUND);
+                        return [3 /*break*/, 3];
+                    case 3: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    /**
+     * Compresses an image buffer with optional dimension constraints
+     *
+     * Uses the sharp library to resize and compress images above the threshold size
+     *
+     * @param data - Image buffer
+     * @param dim - Optional dimension constraints (width and height)
+     * @returns Promise resolving to the compressed image buffer
+     */
+    SharedService.prototype.compressImageData = function (data, dim) {
+        return __awaiter(this, void 0, Promise, function () {
+            var startSize, compressed, error_13;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        startSize = data.length;
+                        this.logger.debug("Compressing image, original size: " + startSize + " bytes");
+                        // Return original if below threshold and no dimensions provided
+                        if (startSize <= IMAGE_CONSTANTS.COMPRESSION_THRESHOLD && (!dim || !dim.height || !dim.width)) {
+                            this.logger.debug('Image below compression threshold, returning original');
+                            return [2 /*return*/, data];
+                        }
+                        _a.label = 1;
+                    case 1:
+                        _a.trys.push([1, 5, , 6]);
+                        if (!(dim && dim.height && dim.width)) return [3 /*break*/, 3];
+                        return [4 /*yield*/, this.resizeAndCompressImage(data, dim.width, dim.height)];
+                    case 2: return [2 /*return*/, _a.sent()];
+                    case 3: return [4 /*yield*/, sharp_1["default"](data).jpeg({ quality: IMAGE_CONSTANTS.JPEG_QUALITY }).withMetadata().toBuffer()];
+                    case 4:
+                        compressed = _a.sent();
+                        this.logger.debug("Image compressed from " + startSize + " to " + compressed.length + " bytes");
+                        return [2 /*return*/, compressed];
+                    case 5:
+                        error_13 = _a.sent();
+                        this.logger.error("Image compression failed: " + error_13);
+                        // Return original data if compression fails
+                        return [2 /*return*/, data];
+                    case 6: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    /**
+     * Resizes and compresses an image based on target dimensions
+     *
+     * Maintains aspect ratio while fitting within maximum dimensions
+     *
+     * @param data - Image buffer
+     * @param width - Original width
+     * @param height - Original height
+     * @returns Promise resolving to the resized and compressed image
+     */
+    SharedService.prototype.resizeAndCompressImage = function (data, width, height) {
+        return __awaiter(this, void 0, Promise, function () {
+            var MAX_HEIGHT, MAX_WIDTH, JPEG_QUALITY, newWidth, newHeight, aspectRatio, maxAspectRatio, ratio, ratio, error_14;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        MAX_HEIGHT = IMAGE_CONSTANTS.MAX_HEIGHT, MAX_WIDTH = IMAGE_CONSTANTS.MAX_WIDTH, JPEG_QUALITY = IMAGE_CONSTANTS.JPEG_QUALITY;
+                        newWidth = width;
+                        newHeight = height;
+                        aspectRatio = width / height;
+                        maxAspectRatio = MAX_WIDTH / MAX_HEIGHT;
+                        if (height > MAX_HEIGHT || width > MAX_WIDTH) {
+                            if (aspectRatio < maxAspectRatio) {
+                                ratio = MAX_HEIGHT / height;
+                                newWidth = Math.round(ratio * width);
+                                newHeight = MAX_HEIGHT;
+                            }
+                            else {
+                                ratio = MAX_WIDTH / width;
+                                newHeight = Math.round(ratio * height);
+                                newWidth = MAX_WIDTH;
+                            }
+                        }
+                        this.logger.debug("Resizing image from " + width + "x" + height + " to " + newWidth + "x" + newHeight);
+                        _a.label = 1;
+                    case 1:
+                        _a.trys.push([1, 3, , 4]);
+                        return [4 /*yield*/, sharp_1["default"](data).jpeg({ quality: JPEG_QUALITY }).resize(newWidth, newHeight, { fit: 'outside' }).withMetadata().toBuffer()];
+                    case 2: return [2 /*return*/, _a.sent()];
+                    case 3:
+                        error_14 = _a.sent();
+                        this.logger.error("Image resize failed: " + error_14);
+                        throw error_14;
+                    case 4: return [2 /*return*/];
+                }
+            });
+        });
     };
     var SharedService_1;
     SharedService = SharedService_1 = __decorate([

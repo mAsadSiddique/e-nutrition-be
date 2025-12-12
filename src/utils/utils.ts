@@ -2,6 +2,7 @@ import { BadRequestException } from '@nestjs/common'
 import { Credentials, S3, SES, config } from 'aws-sdk'
 import { callbackType } from './types/generic_types.type'
 import { ENV } from 'src/config/constant'
+import { plainToInstance } from 'class-transformer'
 
 /**
  * @description returns Bucket S3 object
@@ -63,6 +64,27 @@ export const imageFileFilter = (req: Request, file: Express.Multer.File, callbac
 	callback(undefined as any, true)
 }
 
+export const videoFileFilter = (req: Request, file: Express.Multer.File, callback: callbackType) => {
+	if (!file.originalname.match(/\.(mp4|avi|mov|wmv|flv|webm|MP4|AVI|MOV|WMV|FLV|WEBM)$/)) {
+		return callback(new BadRequestException('only video files like .mp4,avi,mov,wmv,flv,webm are allowed'), false)
+	}
+	callback(undefined as any, true)
+}
+
+/**
+ * Generate a URL-friendly slug from a string
+ * @param text - The text to convert to a slug
+ * @returns A URL-friendly slug
+ */
+export function generateSlug(text: string): string {
+	return text
+		.toLowerCase()
+		.trim()
+		.replace(/[^\w\s-]/g, '') // Remove special characters
+		.replace(/[\s_-]+/g, '-') // Replace spaces, underscores, and hyphens with single hyphen
+		.replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
+}
+
 /**
  * This function takes stringify boolean or number string and convert it to boolean value
  * used in case of form data
@@ -88,4 +110,24 @@ export function convertNumberStringToArray(value: string) {
 	})
 	if (!isValid) throw new BadRequestException('should be valid comma separated number string')
 	return stringConvertedToAray
+}
+
+export function parseToJson(value: string, validationDTO: any) {
+	try {
+		// let parsed = undefined
+		if (typeof value === 'string' && !value?.length) throw Error('Input value must be a non-empty JSON string')
+		const parsed = typeof value === 'string' ? JSON.parse(/%[0-9A-Fa-f]{2}/.test(value) ? decodeURIComponent(value) : value) : value
+		// Return transformed data based on the type of parsed value
+
+		return Array.isArray(parsed)
+			? parsed.map((item) => plainToInstance(validationDTO, item))
+			: parsed && typeof parsed === 'object'
+				? plainToInstance(validationDTO, parsed)
+				: (() => {
+						throw new TypeError('Parsed value is neither an array nor an object.')
+					})()
+	} catch (error) {
+		// Catch JSON.parse errors or any other issues
+		throw new BadRequestException(`Failed to parse value: ${error?.['message']}`, parseToJson.name)
+	}
 }

@@ -1,9 +1,4 @@
-import { Transform } from 'class-transformer'
-import { IsNotEmpty, IsEmail } from 'class-validator'
+import { LoginDTO } from './login.dto'
+import { OmitType } from '@nestjs/swagger'
 
-export class ForgotPasswordDTO {
-	@IsNotEmpty()
-	@IsEmail()
-	@Transform((email) => email.value.toLowerCase())
-	email: string
-}
+export class ForgotPasswordDTO extends OmitType(LoginDTO, ['password']){}

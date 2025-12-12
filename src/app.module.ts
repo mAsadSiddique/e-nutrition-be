@@ -9,6 +9,7 @@ import { AdminModule } from './admin/admin.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { CategoryModule } from './category/category.module';
 import { UserModule } from './user/user.module';
+import { BlogModule } from './blog/blog.module';
 
 @Module({
   imports: [
@@ -33,7 +34,8 @@ import { UserModule } from './user/user.module';
     SharedModule,
     AuthModule,
 	CategoryModule,
-	UserModule
+	UserModule,
+	BlogModule
   ],
   controllers: [AppController],
   providers: [AppService],
