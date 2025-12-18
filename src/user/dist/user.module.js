@@ -16,12 +16,13 @@ var typeorm_1 = require("@nestjs/typeorm");
 var user_entity_1 = require("./entities/user.entity");
 var auth_module_1 = require("src/auth/auth.module");
 var google_strategy_1 = require("./social_login-strategies/google.strategy");
+var blog_module_1 = require("src/blog/blog.module");
 var UserModule = /** @class */ (function () {
     function UserModule() {
     }
     UserModule = __decorate([
         common_1.Module({
-            imports: [typeorm_1.TypeOrmModule.forFeature([user_entity_1.User]), shared_module_1.SharedModule, auth_module_1.AuthModule],
+            imports: [typeorm_1.TypeOrmModule.forFeature([user_entity_1.User]), shared_module_1.SharedModule, auth_module_1.AuthModule, blog_module_1.BlogModule],
             providers: [user_service_1.UserService, user_account_service_1.UserAccountService, google_strategy_1.GoogleStrategy],
             controllers: [user_controller_1.UserController],
             exports: [user_service_1.UserService, user_account_service_1.UserAccountService]

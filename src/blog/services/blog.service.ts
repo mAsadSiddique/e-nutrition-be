@@ -562,5 +562,21 @@ export class BlogService {
 
 	// 	return blogResponse
 	// }
+
+	async getUserBlogCategories(userId: number) {
+		try {
+			// Get user's selected categories
+			const userCategoriesWishlist = await this.userCategoryRepo.find({
+				where: { userId: {id: userId} },
+				relations: {categoryId: true}
+			})
+
+			const userCategories = userCategoriesWishlist?.map(uc => uc.categoryId) || []
+
+			return userCategories
+		} catch (error) {
+			this.sharedService.sendError(error, this.getUserBlogCategories.name)
+		}
+	}
 }
 

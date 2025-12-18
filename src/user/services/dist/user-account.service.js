@@ -64,12 +64,13 @@ var response_messages_enum_1 = require("src/utils/enums/response-messages.enum")
  * - Account verification
  */
 var UserAccountService = /** @class */ (function () {
-    function UserAccountService(accountVerificationCache, userRepo, exceptionService, sharedService, jwtService) {
+    function UserAccountService(accountVerificationCache, userRepo, exceptionService, sharedService, jwtService, blogService) {
         this.accountVerificationCache = accountVerificationCache;
         this.userRepo = userRepo;
         this.exceptionService = exceptionService;
         this.sharedService = sharedService;
         this.jwtService = jwtService;
+        this.blogService = blogService;
         this.logger = new common_1.Logger(UserAccountService_1.name);
     }
     UserAccountService_1 = UserAccountService;
@@ -1003,21 +1004,33 @@ var UserAccountService = /** @class */ (function () {
     UserAccountService.prototype.generateJwtAndSendResponse = function (user, isForVerification) {
         if (isForVerification === void 0) { isForVerification = false; }
         return __awaiter(this, void 0, void 0, function () {
-            var jwt, msg;
-            return __generator(this, function (_a) {
-                try {
-                    jwt = this.jwtService.sign(this.getLoginPayload(user));
-                    msg = isForVerification ? response_messages_enum_1.RESPONSE_MESSAGES.EMAIL_VERIFIED : response_messages_enum_1.RESPONSE_MESSAGES.LOGGED_IN;
-                    // Return complete response
-                    return [2 /*return*/, this.sharedService.sendResponse(msg, {
-                            jwt: jwt,
-                            user: user
-                        })];
+            var jwt, msg, userWishlist, _a, _b, error_17;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
+                    case 0:
+                        _c.trys.push([0, 2, , 3]);
+                        jwt = this.jwtService.sign(this.getLoginPayload(user));
+                        msg = isForVerification ? response_messages_enum_1.RESPONSE_MESSAGES.EMAIL_VERIFIED : response_messages_enum_1.RESPONSE_MESSAGES.LOGGED_IN;
+                        userWishlist = {};
+                        _a = userWishlist;
+                        _b = 'userCategories';
+                        return [4 /*yield*/, this.blogService.getUserBlogCategories(user.id)
+                            // Return complete response
+                        ];
+                    case 1:
+                        _a[_b] = _c.sent();
+                        // Return complete response
+                        return [2 /*return*/, this.sharedService.sendResponse(msg, {
+                                jwt: jwt,
+                                user: user,
+                                userWishlist: userWishlist
+                            })];
+                    case 2:
+                        error_17 = _c.sent();
+                        this.sharedService.sendError(error_17, this.generateJwtAndSendResponse.name);
+                        return [3 /*break*/, 3];
+                    case 3: return [2 /*return*/];
                 }
-                catch (error) {
-                    this.sharedService.sendError(error, this.generateJwtAndSendResponse.name);
-                }
-                return [2 /*return*/];
             });
         });
     };

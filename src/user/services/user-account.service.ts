@@ -23,6 +23,7 @@ import { RESPONSE_MESSAGES } from 'src/utils/enums/response-messages.enum'
 import { LoginDTO } from 'src/shared/dto/login.dto'
 import { ForgotPasswordDTO } from 'src/shared/dto/forgot_password.dto'
 import { ChangePasswordDTO } from 'src/shared/dto/change_password.dto'
+import { BlogService } from 'src/blog/services/blog.service'
 
 /**
  * Service responsible for user account management operations including:
@@ -43,6 +44,7 @@ export class UserAccountService {
 		private readonly exceptionService: ExceptionService,
 		private readonly sharedService: SharedService,
 		private readonly jwtService: JwtService,
+		private readonly blogService: BlogService
 	) {}
 
 	/**
@@ -789,11 +791,14 @@ export class UserAccountService {
 			// Generate JWT token for immediate app access
 			const jwt = this.jwtService.sign(this.getLoginPayload(user))
 			let msg = isForVerification ? RESPONSE_MESSAGES.EMAIL_VERIFIED : RESPONSE_MESSAGES.LOGGED_IN
+			const userWishlist = {}
+			userWishlist['userCategories'] = await this.blogService.getUserBlogCategories(user.id)
 
 			// Return complete response
 			return this.sharedService.sendResponse(msg, {
 				jwt,
 				user,
+				userWishlist
 			})
 		} catch (error) {
 			this.sharedService.sendError(error, this.generateJwtAndSendResponse.name)

@@ -643,6 +643,56 @@ var BlogService = /** @class */ (function () {
         }
         return textContent.substring(0, maxLength) + '...';
     };
+    // private async enrichBlogWithMediaUrls(blog: Blog) {
+    // 	const blogResponse: any = { ...blog }
+    // 	// Get featured image URL
+    // 	if (blog.featuredImageKey) {
+    // 		blogResponse.featuredImageUrl = await this.sharedService.getFileFromS3Bucket(blog.featuredImageKey)
+    // 	}
+    // 	// Get image URLs
+    // 	if (blog.imageKeys && blog.imageKeys.length > 0) {
+    // 		const imageUrlPromises = blog.imageKeys.map(key => this.sharedService.getFileFromS3Bucket(key))
+    // 		blogResponse.imageUrls = await Promise.all(imageUrlPromises)
+    // 	} else {
+    // 		blogResponse.imageUrls = []
+    // 	}
+    // 	// Get video URLs
+    // 	if (blog.videoKeys && blog.videoKeys.length > 0) {
+    // 		const videoUrlPromises = blog.videoKeys.map(key => this.sharedService.getFileFromS3Bucket(key))
+    // 		blogResponse.videoUrls = await Promise.all(videoUrlPromises)
+    // 	} else {
+    // 		blogResponse.videoUrls = []
+    // 	}
+    // 	// Remove keys from response (only send URLs)
+    // 	delete blogResponse.featuredImageKey
+    // 	delete blogResponse.imageKeys
+    // 	delete blogResponse.videoKeys
+    // 	return blogResponse
+    // }
+    BlogService.prototype.getUserBlogCategories = function (userId) {
+        return __awaiter(this, void 0, void 0, function () {
+            var userCategoriesWishlist, userCategories, error_11;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
+                        return [4 /*yield*/, this.userCategoryRepo.find({
+                                where: { userId: { id: userId } },
+                                relations: { categoryId: true }
+                            })];
+                    case 1:
+                        userCategoriesWishlist = _a.sent();
+                        userCategories = (userCategoriesWishlist === null || userCategoriesWishlist === void 0 ? void 0 : userCategoriesWishlist.map(function (uc) { return uc.categoryId; })) || [];
+                        return [2 /*return*/, userCategories];
+                    case 2:
+                        error_11 = _a.sent();
+                        this.sharedService.sendError(error_11, this.getUserBlogCategories.name);
+                        return [3 /*break*/, 3];
+                    case 3: return [2 /*return*/];
+                }
+            });
+        });
+    };
     BlogService = __decorate([
         common_1.Injectable(),
         __param(0, typeorm_1.InjectRepository(blog_entity_1.Blog)),

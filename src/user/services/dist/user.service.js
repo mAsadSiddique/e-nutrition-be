@@ -53,12 +53,13 @@ var user_enums_1 = require("../enums/user.enums");
 var status_enum_1 = require("../enums/status.enum");
 var response_messages_enum_1 = require("src/utils/enums/response-messages.enum");
 var UserService = /** @class */ (function () {
-    function UserService(userRepo, exceptionService, sharedService, userAccountService, jwtService) {
+    function UserService(userRepo, exceptionService, sharedService, userAccountService, jwtService, blogService) {
         this.userRepo = userRepo;
         this.exceptionService = exceptionService;
         this.sharedService = sharedService;
         this.userAccountService = userAccountService;
         this.jwtService = jwtService;
+        this.blogService = blogService;
         this.logger = new common_1.Logger(UserService_1.name);
         this.isCronRunning = false;
     }
@@ -69,14 +70,14 @@ var UserService = /** @class */ (function () {
      * @param args - User entity with ID for lookup
      * @returns Promise with the user profile data
      */
-    UserService.prototype.getUserProfile = function (args) {
+    UserService.prototype.getUserProfile = function (user) {
         return __awaiter(this, void 0, void 0, function () {
-            var profile, responseData, error_1;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var profile, responseData, _a, _b, error_1;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
                     case 0:
-                        _a.trys.push([0, 2, , 3]);
-                        this.logger.log("Fetching profile for user ID: " + args.id);
+                        _c.trys.push([0, 4, , 5]);
+                        this.logger.log("Fetching profile for user ID: " + user.id);
                         return [4 /*yield*/, this.userRepo.findOne({
                                 select: {
                                     id: true,
@@ -94,18 +95,26 @@ var UserService = /** @class */ (function () {
                                     userType: true,
                                     userVerifications: true
                                 },
-                                where: { id: args.id }
+                                where: { id: user.id }
                             })];
                     case 1:
-                        profile = _a.sent();
-                        this.logger.debug("Successfully retrieved profile for user ID: " + args.id);
+                        profile = _c.sent();
+                        this.logger.debug("Successfully retrieved profile for user ID: " + user.id);
                         responseData = { profile: profile };
-                        return [2 /*return*/, this.sharedService.sendResponse(response_messages_enum_1.RESPONSE_MESSAGES.SUCCESS, responseData)];
+                        if (!![user_enums_1.RegisterationTypeEnum.EMAIL, user_enums_1.RegisterationTypeEnum.PHONE].includes(user.registrationType)) return [3 /*break*/, 3];
+                        responseData['userWishlist'] = {};
+                        _a = responseData['userWishlist'];
+                        _b = 'userCategories';
+                        return [4 /*yield*/, this.blogService.getUserBlogCategories(user.id)];
                     case 2:
-                        error_1 = _a.sent();
+                        _a[_b] = _c.sent();
+                        _c.label = 3;
+                    case 3: return [2 /*return*/, this.sharedService.sendResponse(response_messages_enum_1.RESPONSE_MESSAGES.SUCCESS, responseData)];
+                    case 4:
+                        error_1 = _c.sent();
                         this.sharedService.sendError(error_1, this.getUserProfile.name);
-                        return [3 /*break*/, 3];
-                    case 3: return [2 /*return*/];
+                        return [3 /*break*/, 5];
+                    case 5: return [2 /*return*/];
                 }
             });
         });

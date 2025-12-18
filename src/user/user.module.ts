@@ -7,9 +7,10 @@ import {TypeOrmModule} from '@nestjs/typeorm'
 import {User} from './entities/user.entity'
 import {AuthModule} from 'src/auth/auth.module'
 import {GoogleStrategy} from './social_login-strategies/google.strategy'
+import { BlogModule } from 'src/blog/blog.module'
 
 @Module({
-	imports: [TypeOrmModule.forFeature([User]), SharedModule, AuthModule],
+	imports: [TypeOrmModule.forFeature([User]), SharedModule, AuthModule, BlogModule],
 	providers: [UserService, UserAccountService, GoogleStrategy],
 	controllers: [UserController],
 	exports: [UserService, UserAccountService],

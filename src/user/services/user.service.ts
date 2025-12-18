@@ -14,6 +14,7 @@ import {UserAccountService} from './user-account.service'
 import {RetryAccountVerificationDTO} from '../dtos/retry_account_verification.dto'
 import {JwtService} from '@nestjs/jwt'
 import { RESPONSE_MESSAGES } from 'src/utils/enums/response-messages.enum'
+import { BlogService } from 'src/blog/services/blog.service'
 
 @Injectable()
 export class UserService {
@@ -27,6 +28,7 @@ export class UserService {
 		private readonly sharedService: SharedService,
 		private readonly userAccountService: UserAccountService,
 		private readonly jwtService: JwtService,
+		private readonly blogService: BlogService,
 	) {}
 
 	/**
@@ -35,9 +37,9 @@ export class UserService {
 	 * @param args - User entity with ID for lookup
 	 * @returns Promise with the user profile data
 	 */
-	async getUserProfile(args: User) {
+	async getUserProfile(user: User) {
 		try {
-			this.logger.log(`Fetching profile for user ID: ${args.id}`)
+			this.logger.log(`Fetching profile for user ID: ${user.id}`)
 			const profile = await this.userRepo.findOne({
 				select: {
 					id: true,
@@ -55,13 +57,17 @@ export class UserService {
 					userType: true,
 					userVerifications: true as {},
 				},
-				where: {id: args.id},
+				where: {id: user.id},
 			})
 
-			this.logger.debug(`Successfully retrieved profile for user ID: ${args.id}`)
+			this.logger.debug(`Successfully retrieved profile for user ID: ${user.id}`)
 
 			// Prepare base response
-			const responseData: UserProfileResponseType = {profile}
+			const responseData: UserProfileResponseType = { profile }
+			if(![RegisterationTypeEnum.EMAIL, RegisterationTypeEnum.PHONE].includes(user.registrationType)){
+			responseData['userWishlist'] = {}
+			responseData['userWishlist']['userCategories'] = await this.blogService.getUserBlogCategories(user.id)
+			}
 
 			return this.sharedService.sendResponse(RESPONSE_MESSAGES.SUCCESS, responseData)
 		} catch (error) {
