@@ -10,6 +10,9 @@ import { Category } from '../entites/category.entity'
 import { AdminAuthGuard } from 'src/auth/guard/admin_auth.guard'
 import { CategoryEntitiesEnum } from 'src/utils/enums/category-entities.enum'
 import { IdDTO } from 'src/shared/dto/id.dto'
+import { user } from 'src/auth/decorators/user.decorator'
+import { User } from 'src/user/entities/user.entity'
+import { UserAuthGuard } from 'src/auth/guard/user_auth.guard'
 
 @ApiTags('category')
 @ApiBearerAuth('JWT')
@@ -66,5 +69,14 @@ export class CategoryController {
 	@Get('/hot')
 	async hotCategories() {
 		return await this.categoryService.listHotCategories()
+	}
+
+	@ApiCreatedResponse({
+		description: RESPONSE_MESSAGES.USER_CATEGORIES_LISTING,
+	})	
+	@UseGuards(UserAuthGuard)
+	@Post('/wishlist/toggle')
+	async userWishlistToggle(@Body() args: IdDTO, @user() user: User) {
+		return await this.categoryService.userWishlistToggle(args, user)
 	}
 }

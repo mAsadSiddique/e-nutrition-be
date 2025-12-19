@@ -140,4 +140,7 @@ var RESPONSE_MESSAGES;
     RESPONSE_MESSAGES["CATEGORIES_SELECTED"] = "Categories selected successfully";
     RESPONSE_MESSAGES["USER_CATEGORIES_UPDATED"] = "User categories updated successfully";
     RESPONSE_MESSAGES["USER_CATEGORIES_LISTING"] = "User selected categories listed below";
+    // Wishlist
+    RESPONSE_MESSAGES["WISHLIST_UPDATED_SUCCESSFULLY"] = "Wishlist updated successfully";
+    RESPONSE_MESSAGES["WISHLIST_NOT_FOUND"] = "Wishlist not found";
 })(RESPONSE_MESSAGES = exports.RESPONSE_MESSAGES || (exports.RESPONSE_MESSAGES = {}));

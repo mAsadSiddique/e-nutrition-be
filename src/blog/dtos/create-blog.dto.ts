@@ -82,7 +82,8 @@ export class CreateBlogDTO extends ImgsDimDTO {
 		example: ['nestjs', 'backend', 'api']
 	})
 	@IsOptional()
-	@IsArray()
+	@Transform(({ value }) => value.split(',').map((tag: string) => tag.trim()))
+	@ArrayMinSize(1)
 	@IsString({ each: true })
 	tags: string[]
 }

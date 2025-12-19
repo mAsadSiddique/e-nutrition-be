@@ -52,6 +52,8 @@ var response_messages_enum_1 = require("src/utils/enums/response-messages.enum")
 var category_entity_1 = require("../entites/category.entity");
 var admin_auth_guard_1 = require("src/auth/guard/admin_auth.guard");
 var category_entities_enum_1 = require("src/utils/enums/category-entities.enum");
+var user_decorator_1 = require("src/auth/decorators/user.decorator");
+var user_auth_guard_1 = require("src/auth/guard/user_auth.guard");
 var CategoryController = /** @class */ (function () {
     function CategoryController(categoryService) {
         this.categoryService = categoryService;
@@ -108,6 +110,16 @@ var CategoryController = /** @class */ (function () {
             });
         });
     };
+    CategoryController.prototype.userWishlistToggle = function (args, user) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.categoryService.userWishlistToggle(args, user)];
+                    case 1: return [2 /*return*/, _a.sent()];
+                }
+            });
+        });
+    };
     __decorate([
         swagger_1.ApiCreatedResponse({
             description: response_messages_enum_1.RESPONSE_MESSAGES.CATEGORY_REGISTERED,
@@ -153,6 +165,14 @@ var CategoryController = /** @class */ (function () {
         }),
         common_1.Get('/hot')
     ], CategoryController.prototype, "hotCategories");
+    __decorate([
+        swagger_1.ApiCreatedResponse({
+            description: response_messages_enum_1.RESPONSE_MESSAGES.USER_CATEGORIES_LISTING
+        }),
+        common_1.UseGuards(user_auth_guard_1.UserAuthGuard),
+        common_1.Post('/wishlist/toggle'),
+        __param(0, common_1.Body()), __param(1, user_decorator_1.user())
+    ], CategoryController.prototype, "userWishlistToggle");
     CategoryController = __decorate([
         swagger_1.ApiTags('category'),
         swagger_1.ApiBearerAuth('JWT'),

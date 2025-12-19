@@ -8,11 +8,11 @@ import { UserAuthGuard } from '../../auth/guard/user_auth.guard'
 import { user } from '../../auth/decorators/user.decorator'
 import { User } from '../../user/entities/user.entity'
 import { RESPONSE_MESSAGES } from '../../utils/enums/response-messages.enum'
+import { IdDTO } from 'src/shared/dto/id.dto'
 
 @ApiTags('user-blog')
 @ApiBearerAuth('JWT')
 @Controller('user/blog')
-@UseGuards(UserAuthGuard)
 export class UserBlogController {
 	constructor(private readonly blogService: BlogService) { }
 
@@ -35,20 +35,30 @@ export class UserBlogController {
 	// 	return await this.blogService.getBlogById(id)
 	// }
 
-	@ApiCreatedResponse({
-		description: RESPONSE_MESSAGES.CATEGORIES_SELECTED,
-	})
-	@Post('/add/categories')
-	async selectCategories(@Body() args: SelectCategoriesDTO, @user() user: User) {
-		return await this.blogService.selectCategories(args, user.id)
-	}
+	// @ApiCreatedResponse({
+	// 	description: RESPONSE_MESSAGES.CATEGORIES_SELECTED,
+	// })
+	// @Post('/category/wishlist/toggle')
+	// async selectCategories(@Body() args: SelectCategoriesDTO, @user() user: User) {
+	// 	return await this.blogService.selectCategories(args, user.id)
+	// }
 
 	@ApiCreatedResponse({
 		description: RESPONSE_MESSAGES.USER_CATEGORIES_LISTING,
 	})
+	@UseGuards(UserAuthGuard)
 	@Get('/categories')
 	async getSelectedCategories(@user() user: User) {
 		return await this.blogService.getUserSelectedCategories(user.id)
+	}
+
+    @ApiCreatedResponse({
+		description: RESPONSE_MESSAGES.USER_CATEGORIES_LISTING,
+	})	
+	@UseGuards(UserAuthGuard)
+	@Post('/wishlist/toggle')
+	async userWishlistToggle(@Body() args: IdDTO, @user() user: User) {
+		return await this.blogService.userWishlistToggle(args, user)
 	}
 }
 

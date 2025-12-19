@@ -9,6 +9,9 @@ import { CreateCategoryDTO } from './dtos/create-category.dto'
 import { UpdateCategoryDTO } from './dtos/update-category.dto'
 import { CategoryListingDTO } from './dtos/category-listing.dto'
 import { CategoryEntitiesEnum } from 'src/utils/enums/category-entities.enum'
+import { IdDTO } from 'src/shared/dto/id.dto'
+import { User } from 'src/user/entities/user.entity'
+import { UserWishlistService } from 'src/shared/user_wishlist.service'
 
 @Injectable()
 export class CategoryService {
@@ -17,7 +20,8 @@ export class CategoryService {
 		private readonly categoryRepo: Repository<Category>,
 		private readonly exceptionService: ExceptionService,
 		private readonly sharedService: SharedService,
-		private readonly dataSource: DataSource
+		private readonly dataSource: DataSource,
+		private readonly userWishlistService: UserWishlistService
 	) { }
 	private categoriesCache: unknown
 	private productCategoriesCache: unknown
@@ -235,6 +239,17 @@ export class CategoryService {
 			return this.dataSource.getRepository(entity)
 		} catch (error) {
 			this.sharedService.sendError(error, this.getRepoObjByEntityName.name)
+		}
+	}
+
+	async userWishlistToggle(args: IdDTO, user: User) {
+		try {
+			const category = await this.categoryRepo.findOne({where: {id: args.id}})
+			if (!category) this.exceptionService.sendNotFoundException(RESPONSE_MESSAGES.CATEGORY_NOT_FOUND)
+			const userWishlist = await this.userWishlistService.userWishlistToggle(args.id, user, 'category')
+			return this.sharedService.sendResponse(RESPONSE_MESSAGES.WISHLIST_UPDATED_SUCCESSFULLY, {userWishlist})
+		} catch (error) {
+			this.sharedService.sendError(error, this.userWishlistToggle.name)
 		}
 	}
 }

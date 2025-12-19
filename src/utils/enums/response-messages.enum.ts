@@ -156,4 +156,8 @@ export enum RESPONSE_MESSAGES {
 	CATEGORIES_SELECTED = 'Categories selected successfully',
 	USER_CATEGORIES_UPDATED = 'User categories updated successfully',
 	USER_CATEGORIES_LISTING = 'User selected categories listed below',
+
+	// Wishlist
+	WISHLIST_UPDATED_SUCCESSFULLY = 'Wishlist updated successfully',
+	WISHLIST_NOT_FOUND = 'Wishlist not found',
 }

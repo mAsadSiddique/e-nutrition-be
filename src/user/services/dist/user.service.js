@@ -53,13 +53,13 @@ var user_enums_1 = require("../enums/user.enums");
 var status_enum_1 = require("../enums/status.enum");
 var response_messages_enum_1 = require("src/utils/enums/response-messages.enum");
 var UserService = /** @class */ (function () {
-    function UserService(userRepo, exceptionService, sharedService, userAccountService, jwtService, blogService) {
+    function UserService(userRepo, exceptionService, sharedService, userAccountService, jwtService, userWishlistService) {
         this.userRepo = userRepo;
         this.exceptionService = exceptionService;
         this.sharedService = sharedService;
         this.userAccountService = userAccountService;
         this.jwtService = jwtService;
-        this.blogService = blogService;
+        this.userWishlistService = userWishlistService;
         this.logger = new common_1.Logger(UserService_1.name);
         this.isCronRunning = false;
     }
@@ -102,10 +102,9 @@ var UserService = /** @class */ (function () {
                         this.logger.debug("Successfully retrieved profile for user ID: " + user.id);
                         responseData = { profile: profile };
                         if (!![user_enums_1.RegisterationTypeEnum.EMAIL, user_enums_1.RegisterationTypeEnum.PHONE].includes(user.registrationType)) return [3 /*break*/, 3];
-                        responseData['userWishlist'] = {};
-                        _a = responseData['userWishlist'];
-                        _b = 'userCategories';
-                        return [4 /*yield*/, this.blogService.getUserBlogCategories(user.id)];
+                        _a = responseData;
+                        _b = 'userWishlist';
+                        return [4 /*yield*/, this.userWishlistService.getUserWishlistByUserId(user.id)];
                     case 2:
                         _a[_b] = _c.sent();
                         _c.label = 3;

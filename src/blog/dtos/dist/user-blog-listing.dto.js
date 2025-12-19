@@ -25,36 +25,41 @@ var class_transformer_1 = require("class-transformer");
 var class_validator_1 = require("class-validator");
 var id_dto_1 = require("src/shared/dto/id.dto");
 var pagination_dto_1 = require("src/shared/dto/pagination.dto");
+var create_blog_dto_1 = require("./create-blog.dto");
 var BlogSortBy;
 (function (BlogSortBy) {
-    BlogSortBy["LATEST"] = "latest";
-    BlogSortBy["TRENDING"] = "trending";
+    BlogSortBy["OLD_TO_NEW"] = "oldToNew";
+    BlogSortBy["NEW_TO_OLD"] = "newToOld";
 })(BlogSortBy = exports.BlogSortBy || (exports.BlogSortBy = {}));
 var UserBlogListingDTO = /** @class */ (function (_super) {
     __extends(UserBlogListingDTO, _super);
     function UserBlogListingDTO() {
         var _this = _super !== null && _super.apply(this, arguments) || this;
-        _this.sortBy = BlogSortBy.LATEST;
+        _this.sortBy = BlogSortBy.NEW_TO_OLD;
         return _this;
     }
     __decorate([
         swagger_1.ApiPropertyOptional({
-            description: 'Filter by specific category ID',
-            example: 1
-        }),
-        class_validator_1.IsOptional(),
-        class_transformer_1.Type(function () { return Number; }),
-        class_validator_1.IsPositive()
-    ], UserBlogListingDTO.prototype, "categoryId");
-    __decorate([
-        swagger_1.ApiPropertyOptional({
             description: 'Sort blogs by latest or trending',
             "enum": BlogSortBy,
-            "default": BlogSortBy.LATEST
+            "default": BlogSortBy.NEW_TO_OLD
         }),
         class_validator_1.IsOptional(),
         class_validator_1.IsEnum(BlogSortBy)
     ], UserBlogListingDTO.prototype, "sortBy");
+    __decorate([
+        swagger_1.ApiPropertyOptional({
+            description: 'Search keyword to filter or query specific records',
+            nullable: true,
+            example: 'plumber'
+        }),
+        class_validator_1.IsOptional(),
+        class_transformer_1.Transform(function (_a) {
+            var value = _a.value;
+            return value === null || value === void 0 ? void 0 : value.trim();
+        }),
+        class_validator_1.Length(1, 100)
+    ], UserBlogListingDTO.prototype, "search");
     return UserBlogListingDTO;
-}(swagger_1.IntersectionType(pagination_dto_1.PaginationDTO, swagger_1.PartialType(id_dto_1.IdDTO))));
+}(swagger_1.IntersectionType(pagination_dto_1.PaginationDTO, swagger_1.PartialType(id_dto_1.IdDTO), swagger_1.PartialType(swagger_1.PickType(create_blog_dto_1.CreateBlogDTO, ['tags', 'slug', 'categoryIds'])))));
 exports.UserBlogListingDTO = UserBlogListingDTO;

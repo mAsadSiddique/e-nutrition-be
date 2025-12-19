@@ -120,7 +120,11 @@ var CreateBlogDTO = /** @class */ (function (_super) {
             example: ['nestjs', 'backend', 'api']
         }),
         class_validator_1.IsOptional(),
-        class_validator_1.IsArray(),
+        class_transformer_1.Transform(function (_a) {
+            var value = _a.value;
+            return value.split(',').map(function (tag) { return tag.trim(); });
+        }),
+        class_validator_1.ArrayMinSize(1),
         class_validator_1.IsString({ each: true })
     ], CreateBlogDTO.prototype, "tags");
     return CreateBlogDTO;

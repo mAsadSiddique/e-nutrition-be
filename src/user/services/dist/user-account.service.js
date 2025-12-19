@@ -64,13 +64,14 @@ var response_messages_enum_1 = require("src/utils/enums/response-messages.enum")
  * - Account verification
  */
 var UserAccountService = /** @class */ (function () {
-    function UserAccountService(accountVerificationCache, userRepo, exceptionService, sharedService, jwtService, blogService) {
+    function UserAccountService(accountVerificationCache, userRepo, exceptionService, sharedService, jwtService, blogService, userWishlistService) {
         this.accountVerificationCache = accountVerificationCache;
         this.userRepo = userRepo;
         this.exceptionService = exceptionService;
         this.sharedService = sharedService;
         this.jwtService = jwtService;
         this.blogService = blogService;
+        this.userWishlistService = userWishlistService;
         this.logger = new common_1.Logger(UserAccountService_1.name);
     }
     UserAccountService_1 = UserAccountService;
@@ -1004,21 +1005,18 @@ var UserAccountService = /** @class */ (function () {
     UserAccountService.prototype.generateJwtAndSendResponse = function (user, isForVerification) {
         if (isForVerification === void 0) { isForVerification = false; }
         return __awaiter(this, void 0, void 0, function () {
-            var jwt, msg, userWishlist, _a, _b, error_17;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            var jwt, msg, userWishlist, error_17;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
                     case 0:
-                        _c.trys.push([0, 2, , 3]);
+                        _a.trys.push([0, 2, , 3]);
                         jwt = this.jwtService.sign(this.getLoginPayload(user));
                         msg = isForVerification ? response_messages_enum_1.RESPONSE_MESSAGES.EMAIL_VERIFIED : response_messages_enum_1.RESPONSE_MESSAGES.LOGGED_IN;
-                        userWishlist = {};
-                        _a = userWishlist;
-                        _b = 'userCategories';
-                        return [4 /*yield*/, this.blogService.getUserBlogCategories(user.id)
+                        return [4 /*yield*/, this.userWishlistService.getUserWishlistByUserId(user.id)
                             // Return complete response
                         ];
                     case 1:
-                        _a[_b] = _c.sent();
+                        userWishlist = _a.sent();
                         // Return complete response
                         return [2 /*return*/, this.sharedService.sendResponse(msg, {
                                 jwt: jwt,
@@ -1026,7 +1024,7 @@ var UserAccountService = /** @class */ (function () {
                                 userWishlist: userWishlist
                             })];
                     case 2:
-                        error_17 = _c.sent();
+                        error_17 = _a.sent();
                         this.sharedService.sendError(error_17, this.generateJwtAndSendResponse.name);
                         return [3 /*break*/, 3];
                     case 3: return [2 /*return*/];

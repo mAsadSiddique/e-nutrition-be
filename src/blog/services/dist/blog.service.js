@@ -63,13 +63,14 @@ var user_blog_listing_dto_1 = require("../dtos/user-blog-listing.dto");
 var response_messages_enum_1 = require("../../utils/enums/response-messages.enum");
 var utils_1 = require("../../utils/utils");
 var BlogService = /** @class */ (function () {
-    function BlogService(blogRepo, userCategoryRepo, categoryRepo, exceptionService, sharedService, categoryService) {
+    function BlogService(blogRepo, userCategoryRepo, categoryRepo, exceptionService, sharedService, categoryService, userWishlistService) {
         this.blogRepo = blogRepo;
         this.userCategoryRepo = userCategoryRepo;
         this.categoryRepo = categoryRepo;
         this.exceptionService = exceptionService;
         this.sharedService = sharedService;
         this.categoryService = categoryService;
+        this.userWishlistService = userWishlistService;
     }
     BlogService.prototype.createBlog = function (args, adminId, files) {
         return __awaiter(this, void 0, void 0, function () {
@@ -537,42 +538,42 @@ var BlogService = /** @class */ (function () {
         });
     };
     BlogService.prototype.getUserBlogs = function (args, user) {
+        var _a, _b;
         return __awaiter(this, void 0, void 0, function () {
-            var userCategories, userCategoryIds, queryBuilder, sevenDaysAgo, _a, blogs, total, error_10;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            var queryBuilder, _c, blogs, total, error_10;
+            return __generator(this, function (_d) {
+                switch (_d.label) {
                     case 0:
-                        _b.trys.push([0, 3, , 4]);
-                        return [4 /*yield*/, this.userCategoryRepo.find({
-                                where: { userId: { id: user.id } },
-                                relations: { categoryId: true }
-                            })];
-                    case 1:
-                        userCategories = _b.sent();
-                        userCategoryIds = (userCategories === null || userCategories === void 0 ? void 0 : userCategories.map(function (uc) { var _a; return (_a = uc.categoryId) === null || _a === void 0 ? void 0 : _a.id; })) || [];
+                        _d.trys.push([0, 2, , 3]);
                         queryBuilder = this.blogRepo.createQueryBuilder('blog')
                             .leftJoinAndSelect('blog.adminId', 'admin')
                             .where('blog.status = :status', { status: blog_entity_1.BlogStatus.PUBLISHED });
                         // .andWhere('categories.id IN (:...categoryIds)', { categoryIds: userCategoryIds })
                         // Only add category filter if array is not empty
-                        if (userCategoryIds.length > 0) {
-                            queryBuilder.andWhere("\n  \t\t\t\t  \tEXISTS (\n  \t\t\t\t  \t  SELECT 1 \n  \t\t\t\t  \t  FROM jsonb_array_elements(blog.categories) AS c\n  \t\t\t\t  \t  WHERE c::int = ANY(:categoryIds)\n  \t\t\t\t  \t)", { categoryIds: userCategoryIds });
+                        // if (userCategoryIds.length > 0) {
+                        // 	queryBuilder.andWhere(`
+                        // 	  	EXISTS (
+                        // 	  	  SELECT 1 
+                        // 	  	  FROM jsonb_array_elements(blog.categories) AS c
+                        // 	  	  WHERE c::int = ANY(:categoryIds)
+                        // 	  	)`,
+                        // 		{ categoryIds: userCategoryIds }
+                        // 	)
+                        // }
+                        if ((_a = args.categoryIds) === null || _a === void 0 ? void 0 : _a.length) {
+                            queryBuilder.andWhere("\n  \t\t\t  \tEXISTS (\n  \t\t\t  \t  SELECT 1 \n  \t\t\t  \t  FROM jsonb_array_elements(blog.categories) AS c\n  \t\t\t  \t  WHERE c::int = ANY(:categoryIds)\n  \t\t\t  \t)", { categoryIds: args.categoryIds });
                         }
-                        if (args.categoryId) {
-                            queryBuilder.andWhere('blog.categories @> :category', { category: JSON.stringify([args.categoryId]) });
+                        if (args.search) {
+                            queryBuilder.andWhere('(blog.title LIKE :search OR blog.content LIKE :search OR blog.excerpt LIKE :search OR blog.seoTitle LIKE :search)', { search: "%" + args.search + "%" });
+                        }
+                        if ((_b = args.tags) === null || _b === void 0 ? void 0 : _b.length) {
+                            queryBuilder.andWhere("blog.tags LIKE ANY (ARRAY[:...tags])", {
+                                tags: args.tags.map(function (tag) { return "%" + tag + "%"; })
+                            });
                         }
                         // Apply sorting
-                        if (args.sortBy === user_blog_listing_dto_1.BlogSortBy.TRENDING) {
-                            sevenDaysAgo = new Date();
-                            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-                            queryBuilder
-                                .andWhere('blog.publishedAt >= :sevenDaysAgo', { sevenDaysAgo: sevenDaysAgo })
-                                .orderBy('(blog.viewsCount + blog.likesCount)', 'DESC')
-                                .addOrderBy('blog.publishedAt', 'DESC');
-                        }
-                        else {
-                            // Latest: by published date
-                            queryBuilder.orderBy('blog.publishedAt', 'DESC');
+                        if (args.sortBy) {
+                            queryBuilder.orderBy('blog.publishedAt', args.sortBy === user_blog_listing_dto_1.BlogSortBy.NEW_TO_OLD ? 'DESC' : 'ASC');
                         }
                         queryBuilder
                             .skip(args.pageNumber)
@@ -583,18 +584,18 @@ var BlogService = /** @class */ (function () {
                             // 	blogs.map(blog => this.enrichBlogWithMediaUrls(blog))
                             // )
                         ];
-                    case 2:
-                        _a = _b.sent(), blogs = _a[0], total = _a[1];
+                    case 1:
+                        _c = _d.sent(), blogs = _c[0], total = _c[1];
                         // Enrich blogs with media URLs
                         // const enrichedBlogs = await Promise.all(
                         // 	blogs.map(blog => this.enrichBlogWithMediaUrls(blog))
                         // )
                         return [2 /*return*/, this.sharedService.sendResponse(response_messages_enum_1.RESPONSE_MESSAGES.BLOG_LISTING, { total: total, blogs: blogs })];
-                    case 3:
-                        error_10 = _b.sent();
+                    case 2:
+                        error_10 = _d.sent();
                         this.sharedService.sendError(error_10, this.getUserBlogs.name);
-                        return [3 /*break*/, 4];
-                    case 4: return [2 /*return*/];
+                        return [3 /*break*/, 3];
+                    case 3: return [2 /*return*/];
                 }
             });
         });
@@ -689,6 +690,31 @@ var BlogService = /** @class */ (function () {
                         this.sharedService.sendError(error_11, this.getUserBlogCategories.name);
                         return [3 /*break*/, 3];
                     case 3: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    BlogService.prototype.userWishlistToggle = function (args, user) {
+        return __awaiter(this, void 0, void 0, function () {
+            var blog, userWishlist, error_12;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 3, , 4]);
+                        return [4 /*yield*/, this.blogRepo.findOne({ where: { id: args.id } })];
+                    case 1:
+                        blog = _a.sent();
+                        if (!blog)
+                            this.exceptionService.sendNotFoundException(response_messages_enum_1.RESPONSE_MESSAGES.BLOG_NOT_FOUND);
+                        return [4 /*yield*/, this.userWishlistService.userWishlistToggle(args.id, user, 'blog')];
+                    case 2:
+                        userWishlist = _a.sent();
+                        return [2 /*return*/, this.sharedService.sendResponse(response_messages_enum_1.RESPONSE_MESSAGES.WISHLIST_UPDATED_SUCCESSFULLY, { userWishlist: userWishlist })];
+                    case 3:
+                        error_12 = _a.sent();
+                        this.sharedService.sendError(error_12, this.userWishlistToggle.name);
+                        return [3 /*break*/, 4];
+                    case 4: return [2 /*return*/];
                 }
             });
         });

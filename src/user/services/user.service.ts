@@ -15,6 +15,7 @@ import {RetryAccountVerificationDTO} from '../dtos/retry_account_verification.dt
 import {JwtService} from '@nestjs/jwt'
 import { RESPONSE_MESSAGES } from 'src/utils/enums/response-messages.enum'
 import { BlogService } from 'src/blog/services/blog.service'
+import { UserWishlistService } from 'src/shared/user_wishlist.service'
 
 @Injectable()
 export class UserService {
@@ -28,7 +29,7 @@ export class UserService {
 		private readonly sharedService: SharedService,
 		private readonly userAccountService: UserAccountService,
 		private readonly jwtService: JwtService,
-		private readonly blogService: BlogService,
+		private readonly userWishlistService: UserWishlistService,
 	) {}
 
 	/**
@@ -65,8 +66,7 @@ export class UserService {
 			// Prepare base response
 			const responseData: UserProfileResponseType = { profile }
 			if(![RegisterationTypeEnum.EMAIL, RegisterationTypeEnum.PHONE].includes(user.registrationType)){
-			responseData['userWishlist'] = {}
-			responseData['userWishlist']['userCategories'] = await this.blogService.getUserBlogCategories(user.id)
+			responseData['userWishlist'] = await this.userWishlistService.getUserWishlistByUserId(user.id)
 			}
 
 			return this.sharedService.sendResponse(RESPONSE_MESSAGES.SUCCESS, responseData)

@@ -75,21 +75,28 @@ var UserBlogController = /** @class */ (function () {
     // async getBlogById(@Param('id', ParseIntPipe) id: number) {
     // 	return await this.blogService.getBlogById(id)
     // }
-    UserBlogController.prototype.selectCategories = function (args, user) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.blogService.selectCategories(args, user.id)];
-                    case 1: return [2 /*return*/, _a.sent()];
-                }
-            });
-        });
-    };
+    // @ApiCreatedResponse({
+    // 	description: RESPONSE_MESSAGES.CATEGORIES_SELECTED,
+    // })
+    // @Post('/category/wishlist/toggle')
+    // async selectCategories(@Body() args: SelectCategoriesDTO, @user() user: User) {
+    // 	return await this.blogService.selectCategories(args, user.id)
+    // }
     UserBlogController.prototype.getSelectedCategories = function (user) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.blogService.getUserSelectedCategories(user.id)];
+                    case 1: return [2 /*return*/, _a.sent()];
+                }
+            });
+        });
+    };
+    UserBlogController.prototype.userWishlistToggle = function (args, user) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.blogService.userWishlistToggle(args, user)];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
             });
@@ -105,23 +112,24 @@ var UserBlogController = /** @class */ (function () {
     ], UserBlogController.prototype, "getUserBlogs");
     __decorate([
         swagger_1.ApiCreatedResponse({
-            description: response_messages_enum_1.RESPONSE_MESSAGES.CATEGORIES_SELECTED
+            description: response_messages_enum_1.RESPONSE_MESSAGES.USER_CATEGORIES_LISTING
         }),
-        common_1.Post('/add/categories'),
-        __param(0, common_1.Body()), __param(1, user_decorator_1.user())
-    ], UserBlogController.prototype, "selectCategories");
+        common_1.UseGuards(user_auth_guard_1.UserAuthGuard),
+        common_1.Get('/categories'),
+        __param(0, user_decorator_1.user())
+    ], UserBlogController.prototype, "getSelectedCategories");
     __decorate([
         swagger_1.ApiCreatedResponse({
             description: response_messages_enum_1.RESPONSE_MESSAGES.USER_CATEGORIES_LISTING
         }),
-        common_1.Get('/categories'),
-        __param(0, user_decorator_1.user())
-    ], UserBlogController.prototype, "getSelectedCategories");
+        common_1.UseGuards(user_auth_guard_1.UserAuthGuard),
+        common_1.Post('/wishlist/toggle'),
+        __param(0, common_1.Body()), __param(1, user_decorator_1.user())
+    ], UserBlogController.prototype, "userWishlistToggle");
     UserBlogController = __decorate([
         swagger_1.ApiTags('user-blog'),
         swagger_1.ApiBearerAuth('JWT'),
-        common_1.Controller('user/blog'),
-        common_1.UseGuards(user_auth_guard_1.UserAuthGuard)
+        common_1.Controller('user/blog')
     ], UserBlogController);
     return UserBlogController;
 }());

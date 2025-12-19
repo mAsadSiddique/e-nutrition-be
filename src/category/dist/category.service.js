@@ -53,11 +53,12 @@ var typeorm_2 = require("typeorm");
 var category_entity_1 = require("./entites/category.entity");
 var category_entities_enum_1 = require("src/utils/enums/category-entities.enum");
 var CategoryService = /** @class */ (function () {
-    function CategoryService(categoryRepo, exceptionService, sharedService, dataSource) {
+    function CategoryService(categoryRepo, exceptionService, sharedService, dataSource, userWishlistService) {
         this.categoryRepo = categoryRepo;
         this.exceptionService = exceptionService;
         this.sharedService = sharedService;
         this.dataSource = dataSource;
+        this.userWishlistService = userWishlistService;
     }
     CategoryService.prototype.createCategory = function (args, entity) {
         return __awaiter(this, void 0, void 0, function () {
@@ -488,6 +489,31 @@ var CategoryService = /** @class */ (function () {
                     this.sharedService.sendError(error, this.getRepoObjByEntityName.name);
                 }
                 return [2 /*return*/];
+            });
+        });
+    };
+    CategoryService.prototype.userWishlistToggle = function (args, user) {
+        return __awaiter(this, void 0, void 0, function () {
+            var category, userWishlist, error_10;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 3, , 4]);
+                        return [4 /*yield*/, this.categoryRepo.findOne({ where: { id: args.id } })];
+                    case 1:
+                        category = _a.sent();
+                        if (!category)
+                            this.exceptionService.sendNotFoundException(response_messages_enum_1.RESPONSE_MESSAGES.CATEGORY_NOT_FOUND);
+                        return [4 /*yield*/, this.userWishlistService.userWishlistToggle(args.id, user, 'category')];
+                    case 2:
+                        userWishlist = _a.sent();
+                        return [2 /*return*/, this.sharedService.sendResponse(response_messages_enum_1.RESPONSE_MESSAGES.WISHLIST_UPDATED_SUCCESSFULLY, { userWishlist: userWishlist })];
+                    case 3:
+                        error_10 = _a.sent();
+                        this.sharedService.sendError(error_10, this.userWishlistToggle.name);
+                        return [3 /*break*/, 4];
+                    case 4: return [2 /*return*/];
+                }
             });
         });
     };

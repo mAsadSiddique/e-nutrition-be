@@ -24,6 +24,7 @@ import { LoginDTO } from 'src/shared/dto/login.dto'
 import { ForgotPasswordDTO } from 'src/shared/dto/forgot_password.dto'
 import { ChangePasswordDTO } from 'src/shared/dto/change_password.dto'
 import { BlogService } from 'src/blog/services/blog.service'
+import { UserWishlistService } from 'src/shared/user_wishlist.service'
 
 /**
  * Service responsible for user account management operations including:
@@ -44,7 +45,8 @@ export class UserAccountService {
 		private readonly exceptionService: ExceptionService,
 		private readonly sharedService: SharedService,
 		private readonly jwtService: JwtService,
-		private readonly blogService: BlogService
+		private readonly blogService: BlogService,
+		private readonly userWishlistService: UserWishlistService,
 	) {}
 
 	/**
@@ -791,8 +793,7 @@ export class UserAccountService {
 			// Generate JWT token for immediate app access
 			const jwt = this.jwtService.sign(this.getLoginPayload(user))
 			let msg = isForVerification ? RESPONSE_MESSAGES.EMAIL_VERIFIED : RESPONSE_MESSAGES.LOGGED_IN
-			const userWishlist = {}
-			userWishlist['userCategories'] = await this.blogService.getUserBlogCategories(user.id)
+			const userWishlist = await this.userWishlistService.getUserWishlistByUserId(user.id)
 
 			// Return complete response
 			return this.sharedService.sendResponse(msg, {

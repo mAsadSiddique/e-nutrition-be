@@ -17,6 +17,8 @@ import { generateSlug } from '../../utils/utils'
 import { CategoryEntitiesEnum } from '../../utils/enums/category-entities.enum'
 import { User } from 'src/user/entities/user.entity'
 import th from 'zod/v4/locales/th.js'
+import { IdDTO } from 'src/shared/dto/id.dto'
+import { UserWishlistService } from 'src/shared/user_wishlist.service'
 
 @Injectable()
 export class BlogService {
@@ -29,7 +31,8 @@ export class BlogService {
 		private readonly categoryRepo: Repository<Category>,
 		private readonly exceptionService: ExceptionService,
 		private readonly sharedService: SharedService,
-		private readonly categoryService: CategoryService
+		private readonly categoryService: CategoryService,
+		private readonly userWishlistService: UserWishlistService		
 	) { }
 
 	async createBlog(args: CreateBlogDTO, adminId: number, files: Array<Express.Multer.File>) {
@@ -421,12 +424,12 @@ export class BlogService {
 		try {
 
 			// Get user's selected categories
-			const userCategories = await this.userCategoryRepo.find({
-				where: { userId: {id: user.id} },
-				relations: {categoryId: true}
-			})
+			// const userCategories = await this.userCategoryRepo.find({
+			// 	where: { userId: {id: user.id} },
+			// 	relations: {categoryId: true}
+			// })
 
-			const userCategoryIds = userCategories?.map(uc => uc.categoryId?.id) || []
+			// const userCategoryIds = userCategories?.map(uc => uc.categoryId?.id) || []
 
 			const queryBuilder = this.blogRepo.createQueryBuilder('blog')
 				.leftJoinAndSelect('blog.adminId', 'admin')
@@ -434,33 +437,47 @@ export class BlogService {
 				// .andWhere('categories.id IN (:...categoryIds)', { categoryIds: userCategoryIds })
 			
 			// Only add category filter if array is not empty
-			if (userCategoryIds.length > 0) {
+			// if (userCategoryIds.length > 0) {
+			// 	queryBuilder.andWhere(`
+  			// 	  	EXISTS (
+  			// 	  	  SELECT 1 
+  			// 	  	  FROM jsonb_array_elements(blog.categories) AS c
+  			// 	  	  WHERE c::int = ANY(:categoryIds)
+  			// 	  	)`,
+			// 		{ categoryIds: userCategoryIds }
+			// 	)
+			// }
+
+			if (args.categoryIds?.length) {
 				queryBuilder.andWhere(`
-  				  	EXISTS (
-  				  	  SELECT 1 
-  				  	  FROM jsonb_array_elements(blog.categories) AS c
-  				  	  WHERE c::int = ANY(:categoryIds)
-  				  	)`,
-					{ categoryIds: userCategoryIds }
+  			  	EXISTS (
+  			  	  SELECT 1 
+  			  	  FROM jsonb_array_elements(blog.categories) AS c
+  			  	  WHERE c::int = ANY(:categoryIds)
+  			  	)`,
+				{ categoryIds: args.categoryIds }
 				)
 			}
 
-			if (args. categoryId) {
-				queryBuilder.andWhere('blog.categories @> :category', { category: JSON.stringify([args.categoryId]) })
+			if(args.search) {
+				queryBuilder.andWhere(
+					'(blog.title LIKE :search OR blog.content LIKE :search OR blog.excerpt LIKE :search OR blog.seoTitle LIKE :search)',
+					{ search: `%${args.search}%` }
+				)
+			}
+
+			if (args.tags?.length) {
+				queryBuilder.andWhere(
+					`blog.tags LIKE ANY (ARRAY[:...tags])`,
+					{
+						tags: args.tags.map(tag => `%${tag}%`)
+					}
+				);
 			}
 
 			// Apply sorting
-			if (args.sortBy === BlogSortBy.TRENDING) {
-				// Trending: based on views and likes in last 7 days
-				const sevenDaysAgo = new Date()
-				sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-				queryBuilder
-					.andWhere('blog.publishedAt >= :sevenDaysAgo', { sevenDaysAgo })
-					.orderBy('(blog.viewsCount + blog.likesCount)', 'DESC')
-					.addOrderBy('blog.publishedAt', 'DESC')
-			} else {
-				// Latest: by published date
-				queryBuilder.orderBy('blog.publishedAt', 'DESC')
+			if (args.sortBy) {
+				queryBuilder.orderBy('blog.publishedAt', args.sortBy === BlogSortBy.NEW_TO_OLD ? 'DESC' : 'ASC')
 			}
 
 			queryBuilder
@@ -576,6 +593,18 @@ export class BlogService {
 			return userCategories
 		} catch (error) {
 			this.sharedService.sendError(error, this.getUserBlogCategories.name)
+		}
+	}
+
+	async userWishlistToggle(args: IdDTO, user: User) {
+		try {
+			const blog = await this.blogRepo.findOne({where: {id: args.id}})
+			if (!blog) this.exceptionService.sendNotFoundException(RESPONSE_MESSAGES.BLOG_NOT_FOUND)
+
+			const userWishlist = await this.userWishlistService.userWishlistToggle(args.id, user, 'blog')
+			return this.sharedService.sendResponse(RESPONSE_MESSAGES.WISHLIST_UPDATED_SUCCESSFULLY, {userWishlist})
+		} catch (error) {
+			this.sharedService.sendError(error, this.userWishlistToggle.name)
 		}
 	}
 }
