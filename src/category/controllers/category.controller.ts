@@ -75,7 +75,7 @@ export class CategoryController {
 		description: RESPONSE_MESSAGES.USER_CATEGORIES_LISTING,
 	})	
 	@UseGuards(UserAuthGuard)
-	@Post('/wishlist/toggle')
+	@Put('/wishlist/toggle')
 	async userWishlistToggle(@Body() args: IdDTO, @user() user: User) {
 		return await this.categoryService.userWishlistToggle(args, user)
 	}
