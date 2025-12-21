@@ -123,7 +123,7 @@ var UserBlogController = /** @class */ (function () {
             description: response_messages_enum_1.RESPONSE_MESSAGES.USER_CATEGORIES_LISTING
         }),
         common_1.UseGuards(user_auth_guard_1.UserAuthGuard),
-        common_1.Post('/wishlist/toggle'),
+        common_1.Put('/wishlist/toggle'),
         __param(0, common_1.Body()), __param(1, user_decorator_1.user())
     ], UserBlogController.prototype, "userWishlistToggle");
     UserBlogController = __decorate([
