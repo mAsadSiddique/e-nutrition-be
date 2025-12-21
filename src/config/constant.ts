@@ -13,6 +13,30 @@ if (!parsed.success) {
 
 const env = parsed.data
 
+/**
+ * Parse file size string to bytes
+ * @param sizeStr - Size string like "5MB", "100MB", "1GB"
+ * @returns Size in bytes
+ */
+function parseFileSize(sizeStr: string): number {
+	const units: { [key: string]: number } = {
+		B: 1,
+		KB: 1024,
+		MB: 1024 * 1024,
+		GB: 1024 * 1024 * 1024,
+	}
+
+	const match = sizeStr.trim().match(/^(\d+(?:\.\d+)?)\s*(B|KB|MB|GB)$/i)
+	if (!match) {
+		throw new Error(`Invalid file size format: ${sizeStr}`)
+	}
+
+	const value = parseFloat(match[1])
+	const unit = match[2].toUpperCase()
+
+	return Math.floor(value * units[unit])
+}
+
 export const ENV = {
 
 	NODE_ENV: env.NODE_ENV,
@@ -50,10 +74,10 @@ export const ENV = {
 	},
 
 	FILE_SIZE: {
-		IMAGE_FILE_SIZE: env.IMAGE_FILE_SIZE,
-		VIDEO_FILE_SIZE: env.VIDEO_FILE_SIZE,
-		AUDIO_FILE_SIZE: env.AUDIO_FILE_SIZE,
-		FIELD_SIZE: env.IMAGE_FIELD_SIZE,
+		IMAGE_FILE_SIZE: parseFileSize(env.IMAGE_FILE_SIZE),
+		VIDEO_FILE_SIZE: parseFileSize(env.VIDEO_FILE_SIZE),
+		AUDIO_FILE_SIZE: parseFileSize(env.AUDIO_FILE_SIZE),
+		FIELD_SIZE: parseFileSize(env.IMAGE_FIELD_SIZE),
 	},
 
 	EMAIL_CONFIG: {
