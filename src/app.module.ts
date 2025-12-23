@@ -23,13 +23,18 @@ import { BlogModule } from './blog/blog.module';
       synchronize: false,
       logging: false,
       autoLoadEntities: true,
-      ssl: {
-        rejectUnauthorized: false,
-      },
+      ssl: ENV.DB.SSL
+        ? {
+            // Use the ENV.DB.SSL variable
+            rejectUnauthorized: false,
+          }
+        : false,
       extra: {
-        ssl: {
-          rejectUnauthorized: false,
-        },
+        ssl: ENV.DB.SSL
+          ? {
+              rejectUnauthorized: false,
+            }
+          : false,
       },
     }),
     CacheModule.register({
