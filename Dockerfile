@@ -31,6 +31,9 @@ COPY --chown=node:node . .
 
 RUN npm i pnpm -g
 
+# ✅ Increase heap to 2GB
+ENV NODE_OPTIONS="--max-old-space-size=2048"
+
 # ✅ use pnpm consistently
 RUN pnpm run build
 
