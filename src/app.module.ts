@@ -1,15 +1,15 @@
-import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ENV } from './config/constant';
-import { SharedModule } from './shared/shared.module';
-import { AuthModule } from './auth/auth.module';
-import { AdminModule } from './admin/admin.module';
-import { CacheModule } from '@nestjs/cache-manager';
-import { CategoryModule } from './category/category.module';
-import { UserModule } from './user/user.module';
-import { BlogModule } from './blog/blog.module';
+import { Module } from '@nestjs/common'
+import { AppController } from './app.controller'
+import { AppService } from './app.service'
+import { TypeOrmModule } from '@nestjs/typeorm'
+import { ENV } from './config/constant'
+import { SharedModule } from './shared/shared.module'
+import { AuthModule } from './auth/auth.module'
+import { AdminModule } from './admin/admin.module'
+import { CacheModule } from '@nestjs/cache-manager'
+import { CategoryModule } from './category/category.module'
+import { UserModule } from './user/user.module'
+import { BlogModule } from './blog/blog.module'
 
 @Module({
   imports: [
@@ -23,19 +23,6 @@ import { BlogModule } from './blog/blog.module';
       synchronize: false,
       logging: false,
       autoLoadEntities: true,
-      ssl: ENV.DB.SSL
-        ? {
-            // Use the ENV.DB.SSL variable
-            rejectUnauthorized: false,
-          }
-        : false,
-      extra: {
-        ssl: ENV.DB.SSL
-          ? {
-              rejectUnauthorized: false,
-            }
-          : false,
-      },
     }),
     CacheModule.register({
       isGlobal: true, // Makes the cache available across the entire app
@@ -52,4 +39,4 @@ import { BlogModule } from './blog/blog.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
