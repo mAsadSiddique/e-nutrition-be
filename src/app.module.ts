@@ -20,14 +20,16 @@ import { BlogModule } from './blog/blog.module';
       username: ENV.DB.USERNAME,
       password: ENV.DB.PASSWORD,
       database: ENV.DB.NAME,
-      charset: 'utf8mb4',
-      synchronize: false, // This should always be false, if you want to add , then please do through migration
+      synchronize: false,
       logging: false,
       autoLoadEntities: true,
-      // entities: ['dist/**/*.entity.js'],
-      // migrations: ['dist/migration/*.js'],
       ssl: {
         rejectUnauthorized: false,
+      },
+      extra: {
+        ssl: {
+          rejectUnauthorized: false,
+        },
       },
     }),
     CacheModule.register({
