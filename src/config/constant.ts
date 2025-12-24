@@ -1,17 +1,17 @@
-import * as dotenv from 'dotenv';
-import { envValidationSchema } from './env.validation';
+import * as dotenv from 'dotenv'
+import { envValidationSchema } from './env.validation'
 
-dotenv.config();
-dotenv.config({ path: `envConfig/${process.env.NODE_ENV}.env` });
+dotenv.config()
+dotenv.config({ path: `envConfig/${process.env.NODE_ENV}.env` })
 
-const parsed = envValidationSchema.safeParse(process.env);
+const parsed = envValidationSchema.safeParse(process.env)
 
 if (!parsed.success) {
-  console.error('❌ Invalid environment variables:', parsed.error.format());
-  throw new Error('Environment validation error. Check your .env file.');
+  console.error('❌ Invalid environment variables:', parsed.error.format())
+  throw new Error('Environment validation error. Check your .env file.')
 }
 
-const env = parsed.data;
+const env = parsed.data
 
 /**
  * Parse file size string to bytes
@@ -24,17 +24,17 @@ function parseFileSize(sizeStr: string): number {
     KB: 1024,
     MB: 1024 * 1024,
     GB: 1024 * 1024 * 1024,
-  };
-
-  const match = sizeStr.trim().match(/^(\d+(?:\.\d+)?)\s*(B|KB|MB|GB)$/i);
-  if (!match) {
-    throw new Error(`Invalid file size format: ${sizeStr}`);
   }
 
-  const value = parseFloat(match[1]);
-  const unit = match[2].toUpperCase();
+  const match = sizeStr.trim().match(/^(\d+(?:\.\d+)?)\s*(B|KB|MB|GB)$/i)
+  if (!match) {
+    throw new Error(`Invalid file size format: ${sizeStr}`)
+  }
 
-  return Math.floor(value * units[unit]);
+  const value = parseFloat(match[1])
+  const unit = match[2].toUpperCase()
+
+  return Math.floor(value * units[unit])
 }
 
 export const ENV = {
@@ -100,4 +100,4 @@ export const ENV = {
   },
 
   // Add more groups as needed
-};
+}
