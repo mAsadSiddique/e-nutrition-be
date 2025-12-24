@@ -1,9 +1,9 @@
+version: "3.9"
+
 services:
   backend:
     container_name: nutrition_be
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: aliadnan107/e-nutrition-be:latest # Use the image from Docker Hub
     env_file:
       - .env
     environment:
@@ -15,6 +15,7 @@ services:
       - "3000:3000"
     networks:
       - app-network
+    restart: unless-stopped
 
   postgres:
     image: postgres:14-alpine
