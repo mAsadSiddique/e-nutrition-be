@@ -382,26 +382,30 @@ var SharedService = /** @class */ (function () {
             });
         });
     };
-    SharedService.prototype.deleteFilesFromS3Bucket = function (params) {
-        return __awaiter(this, void 0, void 0, function () {
-            var request, _i, params_1, param, error_4;
+    SharedService.prototype.deleteFilesFromS3Bucket = function (keys) {
+        return __awaiter(this, void 0, Promise, function () {
+            var deleteRequests_1, error_4;
+            var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 2, , 3]);
-                        request = [];
-                        for (_i = 0, params_1 = params; _i < params_1.length; _i++) {
-                            param = params_1[_i];
-                            request.push(this.s3.deleteObject(param).promise());
-                        }
-                        return [4 /*yield*/, Promise.all(request)];
+                        deleteRequests_1 = [];
+                        keys.forEach(function (key) {
+                            var params = {
+                                Bucket: constant_1.ENV.S3_BUCKET.NAME,
+                                Key: key
+                            };
+                            deleteRequests_1.push(_this.s3.deleteObject(params).promise());
+                        });
+                        return [4 /*yield*/, Promise.all(deleteRequests_1)];
                     case 1:
                         _a.sent();
-                        return [2 /*return*/, true];
+                        return [3 /*break*/, 3];
                     case 2:
                         error_4 = _a.sent();
-                        this.exceptionService.sendNotFoundException(response_messages_enum_1.RESPONSE_MESSAGES.IMAGE_NOT_FOUND);
-                        return [3 /*break*/, 3];
+                        this.logger.error('Failed to delete files from S3 bucket', error_4);
+                        throw error_4;
                     case 3: return [2 /*return*/];
                 }
             });
@@ -751,7 +755,7 @@ var SharedService = /** @class */ (function () {
                         if (!(_c < files_2.length)) return [3 /*break*/, 9];
                         file = files_2[_c];
                         mimetype = file.mimetype.split('/')[0];
-                        key = objKey + "__" + (Date.now() + file.originalname).replace(/\s+/g, '');
+                        key = objKey + "_" + (Date.now() + file.originalname).replace(/\s+/g, '');
                         keys[key] = objKey;
                         compressedData = void 0;
                         if (!['video', 'videos', 'audio'].includes(mimetype)) return [3 /*break*/, 3];

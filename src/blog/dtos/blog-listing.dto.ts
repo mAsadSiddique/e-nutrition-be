@@ -1,11 +1,12 @@
-import { ApiPropertyOptional, IntersectionType, PartialType } from '@nestjs/swagger'
+import { ApiPropertyOptional, IntersectionType, PartialType, PickType } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
 import { IsOptional, IsPositive, IsEnum, IsDateString, Length, IsInt } from 'class-validator'
 import { BlogStatus } from '../entities/blog.entity'
 import { PaginationDTO } from 'src/shared/dto/pagination.dto'
 import { IdDTO } from 'src/shared/dto/id.dto'
+import { CreateBlogDTO } from './create-blog.dto'
 
-export class BlogListingDTO extends IntersectionType(PaginationDTO, PartialType(IdDTO)){
+export class BlogListingDTO extends IntersectionType(PaginationDTO, PartialType(IdDTO), PickType(CreateBlogDTO, ['tags'])){
 
 	@ApiPropertyOptional({
 		description: 'Filter by category ID',

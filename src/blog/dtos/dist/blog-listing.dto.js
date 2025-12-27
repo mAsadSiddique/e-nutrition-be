@@ -26,6 +26,7 @@ var class_validator_1 = require("class-validator");
 var blog_entity_1 = require("../entities/blog.entity");
 var pagination_dto_1 = require("src/shared/dto/pagination.dto");
 var id_dto_1 = require("src/shared/dto/id.dto");
+var create_blog_dto_1 = require("./create-blog.dto");
 var BlogListingDTO = /** @class */ (function (_super) {
     __extends(BlogListingDTO, _super);
     function BlogListingDTO() {
@@ -74,5 +75,5 @@ var BlogListingDTO = /** @class */ (function (_super) {
         class_validator_1.IsDateString()
     ], BlogListingDTO.prototype, "toDate");
     return BlogListingDTO;
-}(swagger_1.IntersectionType(pagination_dto_1.PaginationDTO, swagger_1.PartialType(id_dto_1.IdDTO))));
+}(swagger_1.IntersectionType(pagination_dto_1.PaginationDTO, swagger_1.PartialType(id_dto_1.IdDTO), swagger_1.PickType(create_blog_dto_1.CreateBlogDTO, ['tags']))));
 exports.BlogListingDTO = BlogListingDTO;

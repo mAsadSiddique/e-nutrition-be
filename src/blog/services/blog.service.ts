@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Repository, In, Between, MoreThan } from 'typeorm'
+import { Repository, In } from 'typeorm'
 import { Blog, BlogStatus } from '../entities/blog.entity'
 import { UserCategory } from '../entities/user-category.entity'
 import { Category } from '../../category/entites/category.entity'
@@ -14,14 +14,14 @@ import { SharedService } from '../../shared/shared.service'
 import { CategoryService } from '../../category/category.service'
 import { RESPONSE_MESSAGES } from '../../utils/enums/response-messages.enum'
 import { generateSlug } from '../../utils/utils'
-import { CategoryEntitiesEnum } from '../../utils/enums/category-entities.enum'
 import { User } from 'src/user/entities/user.entity'
-import th from 'zod/v4/locales/th.js'
 import { IdDTO } from 'src/shared/dto/id.dto'
 import { UserWishlistService } from 'src/shared/user_wishlist.service'
 
 @Injectable()
 export class BlogService {
+
+	private logger = new Logger(BlogService.name)
 	constructor(
 		@InjectRepository(Blog)
 		private readonly blogRepo: Repository<Blog>,
@@ -89,15 +89,14 @@ export class BlogService {
 				categories: categories?.map(category => category.id) || null
 			})
 
-			// if (Object.entries(files)?.length) {
+			if (Object.entries(files)?.length) {
 
-			// 	blog.media = {}
-			// 	const keys = await this.sharedService.uploadMultipleFileToS3Bucket(files, args.dims)
-			// 	const keyValues = await this.sharedService.getMultipleFilesFromS3Bucket(keys)
+				blog.media = {}
+				const keys = await this.sharedService.uploadMultipleFileToS3Bucket(files, args.dims)
+				blog.media = { images: await this.sharedService.getMultipleFilesFromS3Bucket(keys) }
 
-			// 	blog.media[Date.now()] = {images: keyValues}
-			// 	blog.mediaExpiredAt = new Date().setDate(new Date().getDate() + 6)
-			// }
+				blog.mediaExpiredAt = new Date().setDate(new Date().getDate() + 6)
+			}
 
 			await this.blogRepo.insert(blog)
 
@@ -197,6 +196,68 @@ export class BlogService {
 				}
 			}
 
+			// Handle media removal
+			if (args.mediaToBeRemoved) {
+				const bucketKeysToDelete: string[] = []
+				// Remove images if specified
+				if (args.mediaToBeRemoved.imageKeys?.length && Object.entries(blog.media?.images || {}).length) {
+					const contentImagesKeys: { [key: string]: string } = {}
+					Object.keys(blog.media?.images || {})?.map((key) => {
+						contentImagesKeys[key.split('_')[0]] = key
+					})
+					args.mediaToBeRemoved.imageKeys.forEach((key) => {
+						if (contentImagesKeys?.[key]) {
+							bucketKeysToDelete.push(contentImagesKeys?.[key])
+							delete blog.media?.images?.[contentImagesKeys?.[key]]
+							this.logger.log(`Removed image key "${key}" from blog ${args.id}`, this.updateBlog.name)
+						}
+						if (blog.media?.images?.[key]) {
+							bucketKeysToDelete.push(key)
+							delete blog.media?.images?.[key]
+							this.logger.log(`Removed image key "${key}" from blog ${args.id}`, this.updateBlog.name)
+						}
+					})
+				}
+
+				// Delete files from S3 if there are keys to remove
+				if (bucketKeysToDelete.length) {
+					await this.sharedService.deleteFilesFromS3Bucket(bucketKeysToDelete)
+					this.logger.log(`Deleted ${bucketKeysToDelete.length} files from S3 for blog ${args.id}`, this.updateBlog.name)
+				} else {
+					this.exceptionService.sendBadRequestException(RESPONSE_MESSAGES.MEDIA_NOT_FOUND)
+				}
+
+				if (Object.entries(blog.media?.images || {}).length === 0) {
+					blog.media = null
+				}
+			}
+
+			// Process uploaded files (videos and images)
+			if (Object.entries(files)?.length) {
+
+				// Handle images upload
+				if (Object.entries(files)?.length) {
+					// Enforce max image limit (5)
+					if (Object.entries(files)?.length + Object.entries(blog.media?.images || {})?.length > 5) {
+						this.logger.error(`Image limit exceeded (current: ${Object.entries(blog.media?.images || {})?.length}, new: ${Object.entries(files)?.length})`, this.updateBlog.name)
+						this.exceptionService.sendNotAcceptableException(RESPONSE_MESSAGES.IMAGE_LIMIT_EXCEEDED)
+					}
+					const fileKeys = Object.keys(files)
+					const mediaImagesKeys = Object.keys(blog.media?.images || {})?.map(key => key.split('_')[0])
+					fileKeys.map(key => {
+						if (mediaImagesKeys.includes(key)) {
+							this.exceptionService.sendConflictException(`Image with key: ${key} already exists in blog media`)
+						}
+					})
+					// Upload new images
+					const keys = await this.sharedService.uploadMultipleFileToS3Bucket(files, args.dims)
+					const keyValues = await this.sharedService.getMultipleFilesFromS3Bucket(keys)
+					blog.media = {...blog.media, images: {...blog.media?.images, ...keyValues}}
+					this.logger.log(`Uploaded ${Object.entries(files)?.length} new images for task post ${args.id}`, this.updateBlog.name)
+				}
+				if (!blog.mediaExpiredAt) blog.mediaExpiredAt = new Date().setDate(new Date().getDate() + 6)
+			}
+
 			await this.blogRepo.update({id: blog.id}, blog)
 
 			return this.sharedService.sendResponse(RESPONSE_MESSAGES.BLOG_UPDATED, {blog})
@@ -217,7 +278,11 @@ export class BlogService {
 				this.exceptionService.sendForbiddenException('You are not authorized to delete this blog')
 			}
 
-			// Delete media files from S3
+			// Delete files from s3 bucket
+			if (Object.entries(blog?.media?.images || {}).length) {
+				const bucketKeys: string[] = Object.keys(blog.media?.images || {})?.map(key => key)
+				if (bucketKeys.length) await this.sharedService.deleteFilesFromS3Bucket(bucketKeys)
+			}
 
 			await this.blogRepo.delete({id: blog.id})
 			return this.sharedService.sendResponse(RESPONSE_MESSAGES.BLOG_DELETED)
@@ -250,7 +315,7 @@ export class BlogService {
 
 	async listBlogs(args: BlogListingDTO) {
 		try {
-			const { pageNumber, pageSize, categoryId, status, search, fromDate, toDate, id } = args
+			const { pageNumber, pageSize, categoryId, status, search, fromDate, toDate, id, tags } = args
 			const skip = (pageNumber) * pageSize
 
 			const queryBuilder = this.blogRepo.createQueryBuilder('blog')
@@ -270,9 +335,21 @@ export class BlogService {
 
 			if (search) {
 				queryBuilder.andWhere(
-					'(blog.title LIKE :search OR blog.content LIKE :search OR blog.excerpt LIKE :search)',
+					'(blog.title LIKE :search OR blog.seoTitle LIKE :search OR blog.excerpt LIKE :search OR blog.seoDescription LIKE :search)',
 					{ search: `%${search}%` }
 				)
+			}
+
+			if (tags?.length) {
+			  queryBuilder.andWhere(
+			    tags
+			      .map((_, index) => `blog.tags ILIKE :tag${index}`)
+			      .join(' OR '),
+			    tags.reduce((acc, tag, index) => {
+			      acc[`tag${index}`] = `%${tag}%`
+			      return acc
+			    }, {}),
+			  )
 			}
 
 			if (fromDate && toDate) {

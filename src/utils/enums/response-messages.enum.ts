@@ -115,6 +115,8 @@ export enum RESPONSE_MESSAGES {
 	IMAGES_LISTING = 'images are listred below',
 	IMAGE_FOR_ALL_ADS_REQUIRED = 'atleast one image is required for every ad',
 	DIMS_REQUIRED = 'dims is required for each image',
+	MEDIA_NOT_FOUND = 'media not found',
+	IMAGE_LIMIT_EXCEEDED = 'You cannot upload more than 5 images at once',
 
 	// Role
 	ROLE_REQUIRED = 'actioner role is required for authentication',

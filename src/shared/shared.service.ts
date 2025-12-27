@@ -319,16 +319,21 @@ export class SharedService {
 		}
 	}
 
-	async deleteFilesFromS3Bucket(params: BucketParamType[]) {
+	async deleteFilesFromS3Bucket(keys: string[]): Promise<void> {
 		try {
-			const request: Promise<any>[] = []
-			for (const param of params) {
-				request.push(this.s3.deleteObject(param).promise())
-			}
-			await Promise.all(request)
-			return true
+			const deleteRequests: Promise<any>[] = []
+
+			keys.forEach((key) => {
+				const params = {
+					Bucket: ENV.S3_BUCKET.NAME,
+					Key: key,
+				}
+				deleteRequests.push(this.s3.deleteObject(params).promise())
+			})
+			await Promise.all(deleteRequests)
 		} catch (error) {
-			this.exceptionService.sendNotFoundException(RESPONSE_MESSAGES.IMAGE_NOT_FOUND)
+			this.logger.error('Failed to delete files from S3 bucket', error)
+			throw error
 		}
 	}
 
@@ -614,7 +619,7 @@ export class SharedService {
 				for (const file of files) {
 					const mimetype = file.mimetype.split('/')[0]
 
-					const key = `${objKey}__${(Date.now() + file.originalname).replace(/\s+/g, '')}`
+					const key = `${objKey}_${(Date.now() + file.originalname).replace(/\s+/g, '')}`
 					
 					keys[key] = objKey
 					let compressedData: Buffer

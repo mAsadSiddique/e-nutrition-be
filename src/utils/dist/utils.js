@@ -21,7 +21,7 @@ exports.getWasabiS3Object = function () {
     var credentials = new aws_sdk_1.Credentials(constant_1.ENV.S3_BUCKET.ACCESS_KEY_ID, constant_1.ENV.S3_BUCKET.SECRET_ACCESS_KEY);
     aws_sdk_1.config.credentials = credentials;
     var s3 = new aws_sdk_1.S3({
-        endpoint: process.env.WASABI_ENDPOINT
+        endpoint: constant_1.ENV.S3_BUCKET.ENDPOINT
     });
     return s3;
 };
