@@ -104,6 +104,8 @@ var RESPONSE_MESSAGES;
     RESPONSE_MESSAGES["IMAGES_LISTING"] = "images are listred below";
     RESPONSE_MESSAGES["IMAGE_FOR_ALL_ADS_REQUIRED"] = "atleast one image is required for every ad";
     RESPONSE_MESSAGES["DIMS_REQUIRED"] = "dims is required for each image";
+    RESPONSE_MESSAGES["MEDIA_NOT_FOUND"] = "media not found";
+    RESPONSE_MESSAGES["IMAGE_LIMIT_EXCEEDED"] = "You cannot upload more than 5 images at once";
     // Role
     RESPONSE_MESSAGES["ROLE_REQUIRED"] = "actioner role is required for authentication";
     RESPONSE_MESSAGES["ROLE_UNAUTHORIZE"] = "you are not authorize to perform this action";

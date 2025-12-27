@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
-import { Transform, Type } from 'class-transformer'
-import { IsNotEmpty, IsArray, IsNumber, IsOptional, IsString, IsEnum, ArrayMinSize, Length, IsPositive, IsInt } from 'class-validator'
+import { Transform } from 'class-transformer'
+import { IsNotEmpty, IsOptional, IsString, IsEnum, ArrayMinSize, Length, IsPositive, IsInt } from 'class-validator'
 import { BlogStatus } from '../entities/blog.entity'
 import { ImgsDimDTO } from './dim.dto'
 

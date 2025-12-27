@@ -22,7 +22,7 @@ export const getWasabiS3Object = () => {
 	const credentials: Credentials = new Credentials(ENV.S3_BUCKET.ACCESS_KEY_ID, ENV.S3_BUCKET.SECRET_ACCESS_KEY)
 	config.credentials = credentials
 	const s3: S3 = new S3({
-		endpoint: process.env.WASABI_ENDPOINT,
+		endpoint: ENV.S3_BUCKET.ENDPOINT,
 	})
 	return s3
 
