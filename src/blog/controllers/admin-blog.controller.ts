@@ -44,8 +44,8 @@ export class AdminBlogController {
 			{
 				fileFilter: imageFileFilter,
 				limits: {
-					fileSize: eval(ENV.FILE_SIZE.IMAGE_FILE_SIZE),
-					fieldSize: eval(ENV.FILE_SIZE.FIELD_SIZE),
+					fileSize: ENV.FILE_SIZE.IMAGE_FILE_SIZE,
+					fieldSize: ENV.FILE_SIZE.FIELD_SIZE,
 					files: 5,
 				},
 			}
@@ -86,8 +86,8 @@ export class AdminBlogController {
 			{
 				fileFilter: imageFileFilter,
 				limits: {
-					fileSize: eval(ENV.FILE_SIZE.IMAGE_FILE_SIZE),
-					fieldSize: eval(ENV.FILE_SIZE.FIELD_SIZE),
+					fileSize: ENV.FILE_SIZE.IMAGE_FILE_SIZE,
+					fieldSize: ENV.FILE_SIZE.FIELD_SIZE,
 					files: 5,
 				},
 			}
