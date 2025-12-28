@@ -1,0 +1,48 @@
+version: 2.1
+
+jobs:
+  deploy_prod:
+    machine:
+      enabled: true
+
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - $SSH_FINGERPRINT
+
+      - run:
+          name: Deploy Backend via Docker Compose
+          command: |
+            ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'EOF'
+              set -e
+
+              echo "🚀 Starting deployment..."
+
+              cd ~/e-nutrition-be
+
+              echo "📥 Pulling latest code"
+              git fetch
+              git checkout main
+              git pull origin main
+
+              echo "🐳 Pulling latest Docker images"
+              sudo docker-compose pull
+
+              echo "♻️ Restarting containers"
+              sudo docker-compose up -d
+
+              echo "🧹 Cleaning unused images"
+              sudo docker image prune -f
+
+              echo "✅ Deployment finished successfully"
+            EOF
+
+workflows:
+  version: 2
+  deploy:
+    jobs:
+      - deploy_prod:
+          filters:
+            branches:
+              only:
+                - main
