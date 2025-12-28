@@ -13,29 +13,29 @@ jobs:
       - run:
           name: Deploy Backend via Docker Compose
           command: |
-            ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'EOF'
+            ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "bash -c '
               set -e
 
-              echo "🚀 Starting deployment..."
+              echo \"🚀 Starting deployment...\"
 
               cd ~/e-nutrition-be
 
-              echo "📥 Pulling latest code"
+              echo \"📥 Pulling latest code\"
               git fetch
               git checkout main
               git pull origin main
 
-              echo "🐳 Pulling latest Docker images"
+              echo \"🐳 Pulling latest Docker images\"
               sudo docker-compose pull
 
-              echo "♻️ Restarting containers"
+              echo \"♻️ Restarting containers\"
               sudo docker-compose up -d
 
-              echo "🧹 Cleaning unused images"
+              echo \"🧹 Cleaning unused images\"
               sudo docker image prune -f
 
-              echo "✅ Deployment finished successfully"
-            EOF
+              echo \"✅ Deployment finished successfully\"
+            '"
 
 workflows:
   version: 2
