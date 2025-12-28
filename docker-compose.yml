@@ -3,7 +3,7 @@ version: '3.9'
 services:
   backend:
     container_name: nutrition_be
-    image:image: asadsiddique01/e-nutrition-be:latest # aliadnan107/e-nutrition-be:latest # Use the image from Docker Hub
+    image: asadsiddique01/e-nutrition-be:latest # aliadnan107/e-nutrition-be:latest # Use the image from Docker Hub
     env_file:
       - .env
     environment:
