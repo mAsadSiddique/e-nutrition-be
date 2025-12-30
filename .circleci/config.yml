@@ -8,7 +8,7 @@ jobs:
     steps:
       - add_ssh_keys:
           fingerprints:
-            - $SSH_FINGERPRINT
+            - $SSH_FINGERPRINT  # Your Lightsail SSH key fingerprint
 
       - run:
           name: Deploy Backend via Docker Compose

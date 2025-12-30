@@ -1,9 +1,11 @@
-version: '3.9'
+version: '3.9'  # Optional, Docker Compose v2 ignores this
 
 services:
   backend:
     container_name: nutrition_be
-    image: asadsiddique01/e-nutrition-be:latest # aliadnan107/e-nutrition-be:latest # Use the image from Docker Hub
+    build:
+      context: .        # Build from the Dockerfile in your repo
+      dockerfile: Dockerfile
     env_file:
       - .env
     environment:
