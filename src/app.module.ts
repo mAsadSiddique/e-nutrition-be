@@ -25,7 +25,7 @@ import { BlogModule } from './blog/blog.module';
       autoLoadEntities: true,
     }),
     CacheModule.register({
-      isGlobal: true, // Makes the cache available across the entire app
+      isGlobal: true, // Makes the cache available across the entire 
       ttl: 0.5 * 60 * 1000, // Optional: Time-to-live (in milliseconds), default is 30 seconds
       max: 100, // Optional: Maximum number of items in cache
     }),
