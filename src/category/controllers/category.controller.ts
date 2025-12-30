@@ -13,6 +13,7 @@ import { IdDTO } from 'src/shared/dto/id.dto'
 import { user } from 'src/auth/decorators/user.decorator'
 import { User } from 'src/user/entities/user.entity'
 import { UserAuthGuard } from 'src/auth/guard/user_auth.guard'
+import { IdsDTO } from 'src/shared/dto/ids.dto'
 
 @ApiTags('category')
 @ApiBearerAuth('JWT')
@@ -78,5 +79,14 @@ export class CategoryController {
 	@Put('/wishlist/toggle')
 	async userWishlistToggle(@Body() args: IdDTO, @user() user: User) {
 		return await this.categoryService.userWishlistToggle(args, user)
+	}
+
+	@ApiCreatedResponse({
+		description: RESPONSE_MESSAGES.USER_CATEGORIES_LISTING,
+	})	
+	@UseGuards(UserAuthGuard)
+	@Put('/wishlist')
+	async userWishlist(@Body() args: IdsDTO, @user() user: User) {
+		return await this.categoryService.userWishlist(args, user)
 	}
 }

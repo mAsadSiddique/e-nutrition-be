@@ -1,5 +1,5 @@
-import { Body, Controller, Get, Param, Post, Query, UseGuards, ParseIntPipe, Put } from '@nestjs/common'
-import { ApiTags, ApiBearerAuth, ApiCreatedResponse, ApiNotFoundResponse } from '@nestjs/swagger'
+import { Body, Controller, Get, Query, UseGuards, Put } from '@nestjs/common'
+import { ApiTags, ApiBearerAuth, ApiCreatedResponse } from '@nestjs/swagger'
 import { BlogService } from '../services/blog.service'
 import { SelectCategoriesDTO } from '../dtos/select-categories.dto'
 import { UserBlogListingDTO } from '../dtos/user-blog-listing.dto'

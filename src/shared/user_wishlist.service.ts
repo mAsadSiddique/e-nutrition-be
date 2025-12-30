@@ -62,6 +62,29 @@ export class UserWishlistService {
 		}
 	}
 
+		/**
+	 * Toggles a single tasker/taskerService/task ID in the user's wishlist.
+	 * If the ID exists in the wishlist, it will be removed. If it doesn't exist, it will be added.
+	 * Uses upsert to insert or update based on userId.
+	 */
+	async userWishlist(ids: number[], user: User, type: UserWishlistType) {
+		try {
+			// Fetch existing wishlist or create a new one
+			const wishlist = (await this.getUserWishlistByUserId(user.id)) || new UserWishlist()
+			wishlist.userId = user
+			// Handle category wishlist logic
+			if (type === 'category') {
+				wishlist.categoriesWishlist = ids
+			}
+
+			// Upsert the wishlist based on userId
+			await this.userWishlistRepo.upsert([wishlist], ['userId'])
+			return {blogsWishlist: wishlist.blogsWishlist, categoriesWishlist: wishlist.categoriesWishlist}
+		} catch (error) {
+			this.sharedService.sendError(error, this.userWishlist.name)
+		}
+	}
+
 	async getUserWishlistByUserId(userId: number) {
 		try {
 			const userWishlist = await this.userWishlistRepo.findOne({
