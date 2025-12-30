@@ -627,13 +627,13 @@ var BlogService = /** @class */ (function () {
         });
     };
     BlogService.prototype.getUserBlogs = function (args, user) {
-        var _a, _b;
+        var _a, _b, _c, _d, _e;
         return __awaiter(this, void 0, void 0, function () {
-            var queryBuilder, _c, blogs, total, error_10;
-            return __generator(this, function (_d) {
-                switch (_d.label) {
+            var queryBuilder, _f, blogs, total, _g, error_10;
+            return __generator(this, function (_h) {
+                switch (_h.label) {
                     case 0:
-                        _d.trys.push([0, 2, , 3]);
+                        _h.trys.push([0, 4, , 5]);
                         queryBuilder = this.blogRepo.createQueryBuilder('blog')
                             .leftJoinAndSelect('blog.adminId', 'admin')
                             .where('blog.status = :status', { status: blog_entity_1.BlogStatus.PUBLISHED });
@@ -642,13 +642,16 @@ var BlogService = /** @class */ (function () {
                         // if (userCategoryIds.length > 0) {
                         // 	queryBuilder.andWhere(`
                         // 	  	EXISTS (
-                        // 	  	  SELECT 1 
+                        // 	  	  SELECT 1
                         // 	  	  FROM jsonb_array_elements(blog.categories) AS c
                         // 	  	  WHERE c::int = ANY(:categoryIds)
                         // 	  	)`,
                         // 		{ categoryIds: userCategoryIds }
                         // 	)
                         // }
+                        if (args.id) {
+                            queryBuilder.andWhere('blog.id = :id', { id: args.id });
+                        }
                         if ((_a = args.categoryIds) === null || _a === void 0 ? void 0 : _a.length) {
                             queryBuilder.andWhere("\n  \t\t\t  \tEXISTS (\n  \t\t\t  \t  SELECT 1 \n  \t\t\t  \t  FROM jsonb_array_elements(blog.categories) AS c\n  \t\t\t  \t  WHERE c::int = ANY(:categoryIds)\n  \t\t\t  \t)", { categoryIds: args.categoryIds });
                         }
@@ -667,24 +670,26 @@ var BlogService = /** @class */ (function () {
                         queryBuilder
                             .skip(args.pageNumber)
                             .take(args.pageSize);
-                        return [4 /*yield*/, queryBuilder.getManyAndCount()
-                            // Enrich blogs with media URLs
-                            // const enrichedBlogs = await Promise.all(
-                            // 	blogs.map(blog => this.enrichBlogWithMediaUrls(blog))
-                            // )
-                        ];
+                        return [4 /*yield*/, queryBuilder.getManyAndCount()];
                     case 1:
-                        _c = _d.sent(), blogs = _c[0], total = _c[1];
-                        // Enrich blogs with media URLs
-                        // const enrichedBlogs = await Promise.all(
-                        // 	blogs.map(blog => this.enrichBlogWithMediaUrls(blog))
-                        // )
-                        return [2 /*return*/, this.sharedService.sendResponse(response_messages_enum_1.RESPONSE_MESSAGES.BLOG_LISTING, { total: total, blogs: blogs })];
+                        _f = _h.sent(), blogs = _f[0], total = _f[1];
+                        if (!(args.id && ((_d = (_c = blogs[0]) === null || _c === void 0 ? void 0 : _c.categories) === null || _d === void 0 ? void 0 : _d.length))) return [3 /*break*/, 3];
+                        _g = blogs[0];
+                        return [4 /*yield*/, this.categoryRepo.findBy({ id: typeorm_2.In((_e = blogs[0]) === null || _e === void 0 ? void 0 : _e.categories) })];
                     case 2:
-                        error_10 = _d.sent();
+                        _g.categories = (_h.sent());
+                        _h.label = 3;
+                    case 3: 
+                    // Enrich blogs with media URLs
+                    // const enrichedBlogs = await Promise.all(
+                    // 	blogs.map(blog => this.enrichBlogWithMediaUrls(blog))
+                    // )
+                    return [2 /*return*/, this.sharedService.sendResponse(response_messages_enum_1.RESPONSE_MESSAGES.BLOG_LISTING, { total: total, blogs: blogs })];
+                    case 4:
+                        error_10 = _h.sent();
                         this.sharedService.sendError(error_10, this.getUserBlogs.name);
-                        return [3 /*break*/, 3];
-                    case 3: return [2 /*return*/];
+                        return [3 /*break*/, 5];
+                    case 5: return [2 /*return*/];
                 }
             });
         });

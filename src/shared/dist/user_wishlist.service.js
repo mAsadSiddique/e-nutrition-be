@@ -129,9 +129,44 @@ var UserWishlistService = /** @class */ (function () {
             });
         });
     };
+    /**
+ * Toggles a single tasker/taskerService/task ID in the user's wishlist.
+ * If the ID exists in the wishlist, it will be removed. If it doesn't exist, it will be added.
+ * Uses upsert to insert or update based on userId.
+ */
+    UserWishlistService.prototype.userWishlist = function (ids, user, type) {
+        return __awaiter(this, void 0, void 0, function () {
+            var wishlist, error_2;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 3, , 4]);
+                        return [4 /*yield*/, this.getUserWishlistByUserId(user.id)];
+                    case 1:
+                        wishlist = (_a.sent()) || new user_wihshlist_entity_1.UserWishlist();
+                        wishlist.userId = user;
+                        // Handle category wishlist logic
+                        if (type === 'category') {
+                            wishlist.categoriesWishlist = ids;
+                        }
+                        // Upsert the wishlist based on userId
+                        return [4 /*yield*/, this.userWishlistRepo.upsert([wishlist], ['userId'])];
+                    case 2:
+                        // Upsert the wishlist based on userId
+                        _a.sent();
+                        return [2 /*return*/, { blogsWishlist: wishlist.blogsWishlist, categoriesWishlist: wishlist.categoriesWishlist }];
+                    case 3:
+                        error_2 = _a.sent();
+                        this.sharedService.sendError(error_2, this.userWishlist.name);
+                        return [3 /*break*/, 4];
+                    case 4: return [2 /*return*/];
+                }
+            });
+        });
+    };
     UserWishlistService.prototype.getUserWishlistByUserId = function (userId) {
         return __awaiter(this, void 0, void 0, function () {
-            var userWishlist, responseToSend, id, res, error_2;
+            var userWishlist, responseToSend, id, res, error_3;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -149,8 +184,8 @@ var UserWishlistService = /** @class */ (function () {
                         }
                         return [2 /*return*/, responseToSend];
                     case 2:
-                        error_2 = _a.sent();
-                        this.sharedService.sendError(error_2, this.getUserWishlistByUserId.name);
+                        error_3 = _a.sent();
+                        this.sharedService.sendError(error_3, this.getUserWishlistByUserId.name);
                         return [3 /*break*/, 3];
                     case 3: return [2 /*return*/];
                 }

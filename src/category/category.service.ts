@@ -12,6 +12,7 @@ import { CategoryEntitiesEnum } from 'src/utils/enums/category-entities.enum'
 import { IdDTO } from 'src/shared/dto/id.dto'
 import { User } from 'src/user/entities/user.entity'
 import { UserWishlistService } from 'src/shared/user_wishlist.service'
+import { IdsDTO } from 'src/shared/dto/ids.dto'
 
 @Injectable()
 export class CategoryService {
@@ -250,6 +251,19 @@ export class CategoryService {
 			return this.sharedService.sendResponse(RESPONSE_MESSAGES.WISHLIST_UPDATED_SUCCESSFULLY, {userWishlist})
 		} catch (error) {
 			this.sharedService.sendError(error, this.userWishlistToggle.name)
+		}
+	}
+
+	async userWishlist(args: IdsDTO, user: User) {
+		try {
+			const categories = await this.categoryRepo.find({where: {id: In(args.ids)}})
+			if (!categories?.length) this.exceptionService.sendNotFoundException(RESPONSE_MESSAGES.CATEGORY_NOT_FOUND)
+			const categoryIds = categories.map(category => category.id)
+
+			const userWishlist = await this.userWishlistService.userWishlist(categoryIds, user, 'category')
+			return this.sharedService.sendResponse(RESPONSE_MESSAGES.WISHLIST_UPDATED_SUCCESSFULLY, {userWishlist})
+		} catch (error) {
+			this.sharedService.sendError(error, this.userWishlist.name)
 		}
 	}
 }

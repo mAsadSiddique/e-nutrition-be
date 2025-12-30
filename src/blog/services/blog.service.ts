@@ -17,6 +17,7 @@ import { generateSlug } from '../../utils/utils'
 import { User } from 'src/user/entities/user.entity'
 import { IdDTO } from 'src/shared/dto/id.dto'
 import { UserWishlistService } from 'src/shared/user_wishlist.service'
+import { IdsDTO } from 'src/shared/dto/ids.dto'
 
 @Injectable()
 export class BlogService {
@@ -517,13 +518,17 @@ export class BlogService {
 			// if (userCategoryIds.length > 0) {
 			// 	queryBuilder.andWhere(`
   			// 	  	EXISTS (
-  			// 	  	  SELECT 1 
+  			// 	  	  SELECT 1
   			// 	  	  FROM jsonb_array_elements(blog.categories) AS c
   			// 	  	  WHERE c::int = ANY(:categoryIds)
   			// 	  	)`,
 			// 		{ categoryIds: userCategoryIds }
 			// 	)
 			// }
+			
+			if (args.id) {
+				queryBuilder.andWhere('blog.id = :id', { id: args.id })
+			}
 
 			if (args.categoryIds?.length) {
 				queryBuilder.andWhere(`
@@ -562,6 +567,9 @@ export class BlogService {
 				.take(args.pageSize)
 
 			const [blogs, total] = await queryBuilder.getManyAndCount()
+
+			if (args.id && blogs[0]?.categories?.length)
+				blogs[0].categories = await this.categoryRepo.findBy({id: In(blogs[0]?.categories)}) as any
 
 			// Enrich blogs with media URLs
 			// const enrichedBlogs = await Promise.all(

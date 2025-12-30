@@ -517,6 +517,32 @@ var CategoryService = /** @class */ (function () {
             });
         });
     };
+    CategoryService.prototype.userWishlist = function (args, user) {
+        return __awaiter(this, void 0, void 0, function () {
+            var categories, categoryIds, userWishlist, error_11;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 3, , 4]);
+                        return [4 /*yield*/, this.categoryRepo.find({ where: { id: typeorm_2.In(args.ids) } })];
+                    case 1:
+                        categories = _a.sent();
+                        if (!(categories === null || categories === void 0 ? void 0 : categories.length))
+                            this.exceptionService.sendNotFoundException(response_messages_enum_1.RESPONSE_MESSAGES.CATEGORY_NOT_FOUND);
+                        categoryIds = categories.map(function (category) { return category.id; });
+                        return [4 /*yield*/, this.userWishlistService.userWishlist(categoryIds, user, 'category')];
+                    case 2:
+                        userWishlist = _a.sent();
+                        return [2 /*return*/, this.sharedService.sendResponse(response_messages_enum_1.RESPONSE_MESSAGES.WISHLIST_UPDATED_SUCCESSFULLY, { userWishlist: userWishlist })];
+                    case 3:
+                        error_11 = _a.sent();
+                        this.sharedService.sendError(error_11, this.userWishlist.name);
+                        return [3 /*break*/, 4];
+                    case 4: return [2 /*return*/];
+                }
+            });
+        });
+    };
     CategoryService = __decorate([
         common_1.Injectable(),
         __param(0, typeorm_1.InjectRepository(category_entity_1.Category))
