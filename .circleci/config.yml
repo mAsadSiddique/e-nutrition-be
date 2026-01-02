@@ -4,38 +4,41 @@ jobs:
   deploy_prod:
     machine:
       enabled: true
-
     steps:
+      - checkout
+
       - add_ssh_keys:
           fingerprints:
-            - $SSH_FINGERPRINT  # Your Lightsail SSH key fingerprint
+            - $SSH_FINGERPRINT
 
       - run:
           name: Deploy Backend via Docker Compose
+          no_output_timeout: 30m
           command: |
-            ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "bash -c '
-              set -e
+            ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "bash -s" "\<<'EOF'"
+            set -e
 
-              echo \"🚀 Starting deployment...\"
+            echo "🚀 Starting deployment..."
 
-              cd /var/www/e-nutrition-be/
+            cd /var/www/e-nutrition-be/
 
-              echo \"📥 Pulling latest code\"
-              git fetch
-              git checkout main
-              git pull origin main
+            echo "📥 Pulling latest code"
+            git fetch origin
+            git checkout main
+            git pull origin main
 
-              echo \"🐳 Building latest Docker image\"
-              sudo docker-compose build --no-cache
+            echo "🐳 Building latest Docker image"
+            export NODE_OPTIONS="--max-old-space-size=2048"
+            sudo docker-compose build --no-cache
 
-              echo \"♻️ Restarting containers\"
-              sudo docker-compose up -d
+            echo "♻️ Restarting containers"
+            sudo docker-compose up -d
 
-              echo \"🧹 Cleaning unused images\"
-              sudo docker image prune -f
+            echo "🧹 Cleaning unused Docker images"
+            sudo docker image prune -f
 
-              echo \"✅ Deployment finished successfully\"
-            '"
+            echo "✅ Deployment finished successfully"
+            EOF
 
 workflows:
   version: 2

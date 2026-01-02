@@ -24,7 +24,6 @@ services:
     container_name: asd_db
     restart: always
     environment:
-      NODE_OPTIONS: "--max-old-space-size=2048"
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
