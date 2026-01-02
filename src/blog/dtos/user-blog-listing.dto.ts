@@ -1,6 +1,6 @@
 import { ApiPropertyOptional, IntersectionType, PartialType, PickType } from '@nestjs/swagger'
 import { Transform } from 'class-transformer'
-import { IsOptional, IsEnum, Length } from 'class-validator'
+import { IsOptional, IsEnum, Length, IsArray, IsInt, IsPositive, ArrayMinSize } from 'class-validator'
 import { IdDTO } from 'src/shared/dto/id.dto'
 import { PaginationDTO } from 'src/shared/dto/pagination.dto'
 import { CreateBlogDTO } from './create-blog.dto'
@@ -30,5 +30,30 @@ export class UserBlogListingDTO extends IntersectionType(PaginationDTO, PartialT
 	@Transform(({value}) => value?.trim())
 	@Length(1, 100)
 	search?: string
+
+	@ApiPropertyOptional({
+		description: 'Array of blog IDs to retrieve multiple blogs. Can be passed as comma-separated string (e.g., "1,2,3") or as array (e.g., [1,2,3])',
+		type: [Number],
+		example: [1, 2, 3],
+		required: false
+	})
+	@IsOptional()
+	@Transform(({ value }) => {
+		if (!value) return undefined
+		if (typeof value === 'string') {
+			const ids = value.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id) && id > 0)
+			return ids.length > 0 ? ids : undefined
+		}
+		if (Array.isArray(value)) {
+			const ids = value.map(id => typeof id === 'string' ? parseInt(id, 10) : id).filter(id => !isNaN(id) && id > 0)
+			return ids.length > 0 ? ids : undefined
+		}
+		return undefined
+	})
+	@IsArray()
+	@ArrayMinSize(1)
+	@IsInt({ each: true })
+	@IsPositive({ each: true })
+	ids?: number[]
 }
 

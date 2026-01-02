@@ -526,7 +526,9 @@ export class BlogService {
 			// 	)
 			// }
 			
-			if (args.id) {
+			if (args.ids?.length) {
+				queryBuilder.andWhere('blog.id IN (:...ids)', { ids: args.ids })
+			} else if (args.id) {
 				queryBuilder.andWhere('blog.id = :id', { id: args.id })
 			}
 
@@ -568,8 +570,14 @@ export class BlogService {
 
 			const [blogs, total] = await queryBuilder.getManyAndCount()
 
-			if (args.id && blogs[0]?.categories?.length)
-				blogs[0].categories = await this.categoryRepo.findBy({id: In(blogs[0]?.categories)}) as any
+			// Enrich blogs with categories if IDs are provided
+			if ((args.ids?.length || args.id) && blogs.length > 0) {
+				for (const blog of blogs) {
+					if (blog.categories?.length) {
+						blog.categories = await this.categoryRepo.findBy({id: In(blog.categories)}) as any
+					}
+				}
+			}
 
 			// Enrich blogs with media URLs
 			// const enrichedBlogs = await Promise.all(
