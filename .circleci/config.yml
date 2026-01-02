@@ -4,38 +4,44 @@ jobs:
   deploy_prod:
     machine:
       enabled: true
-
     steps:
+      # Checkout code (optional, useful for CircleCI logs)
+      - checkout
+
+      # Add your Lightsail SSH key
       - add_ssh_keys:
           fingerprints:
-            - $SSH_FINGERPRINT  # Your Lightsail SSH key fingerprint
+            - $SSH_FINGERPRINT
 
+      # Deploy backend via SSH directly
       - run:
           name: Deploy Backend via Docker Compose
+          # Prevent CircleCI from timing out on long builds
+          no_output_timeout: 30m
           command: |
-            ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "bash -c '
+            ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "bash -s" << 'EOF'
               set -e
 
-              echo \"🚀 Starting deployment...\"
+              echo "🚀 Starting deployment..."
 
               cd /var/www/e-nutrition-be/
 
-              echo \"📥 Pulling latest code\"
-              git fetch
+              echo "📥 Pulling latest code"
+              git fetch origin
               git checkout main
               git pull origin main
 
-              echo \"🐳 Building latest Docker image\"
+              echo "🐳 Building latest Docker image"
               sudo docker-compose build --no-cache
 
-              echo \"♻️ Restarting containers\"
+              echo "♻️ Restarting containers"
               sudo docker-compose up -d
 
-              echo \"🧹 Cleaning unused images\"
+              echo "🧹 Cleaning unused Docker images"
               sudo docker image prune -f
 
-              echo \"✅ Deployment finished successfully\"
-            '"
+              echo "✅ Deployment finished successfully"
+            EOF
 
 workflows:
   version: 2
