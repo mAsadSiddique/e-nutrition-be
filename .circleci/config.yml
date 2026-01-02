@@ -5,44 +5,39 @@ jobs:
     machine:
       enabled: true
     steps:
-      # Step 1: Checkout code for logging & traceability
       - checkout
 
-      # Step 2: Add SSH key for Lightsail
       - add_ssh_keys:
           fingerprints:
             - $SSH_FINGERPRINT
 
-      # Step 3: Deploy backend via SSH
       - run:
           name: Deploy Backend via Docker Compose
-          # Prevent CircleCI from killing long builds
           no_output_timeout: 30m
           command: |
-            ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "bash -s" << 'EOF'
-              set -e
+            ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "bash -s" "\<<'EOF'"
+            set -e
 
-              echo "🚀 Starting deployment..."
+            echo "🚀 Starting deployment..."
 
-              cd /var/www/e-nutrition-be/
+            cd /var/www/e-nutrition-be/
 
-              echo "📥 Pulling latest code"
-              git fetch origin
-              git checkout main
-              git pull origin main
+            echo "📥 Pulling latest code"
+            git fetch origin
+            git checkout main
+            git pull origin main
 
-              echo "🐳 Building latest Docker image"
-              # Increase Node memory to avoid NestJS build crashes
-              export NODE_OPTIONS="--max-old-space-size=2048"
-              sudo docker-compose build --no-cache
+            echo "🐳 Building latest Docker image"
+            export NODE_OPTIONS="--max-old-space-size=2048"
+            sudo docker-compose build --no-cache
 
-              echo "♻️ Restarting containers"
-              sudo docker-compose up -d
+            echo "♻️ Restarting containers"
+            sudo docker-compose up -d
 
-              echo "🧹 Cleaning unused Docker images"
-              sudo docker image prune -f
+            echo "🧹 Cleaning unused Docker images"
+            sudo docker image prune -f
 
-              echo "✅ Deployment finished successfully"
+            echo "✅ Deployment finished successfully"
             EOF
 
 workflows:
