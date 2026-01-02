@@ -5,18 +5,18 @@ jobs:
     machine:
       enabled: true
     steps:
-      # Checkout code (optional, useful for CircleCI logs)
+      # Step 1: Checkout code for logging & traceability
       - checkout
 
-      # Add your Lightsail SSH key
+      # Step 2: Add SSH key for Lightsail
       - add_ssh_keys:
           fingerprints:
             - $SSH_FINGERPRINT
 
-      # Deploy backend via SSH directly
+      # Step 3: Deploy backend via SSH
       - run:
           name: Deploy Backend via Docker Compose
-          # Prevent CircleCI from timing out on long builds
+          # Prevent CircleCI from killing long builds
           no_output_timeout: 30m
           command: |
             ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "bash -s" << 'EOF'
@@ -32,6 +32,8 @@ jobs:
               git pull origin main
 
               echo "🐳 Building latest Docker image"
+              # Increase Node memory to avoid NestJS build crashes
+              export NODE_OPTIONS="--max-old-space-size=2048"
               sudo docker-compose build --no-cache
 
               echo "♻️ Restarting containers"
