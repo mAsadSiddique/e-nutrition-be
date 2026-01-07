@@ -7,7 +7,10 @@ import { ENV } from './config/constant';
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule)
 	app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }))
-	app.enableCors()
+	app.enableCors({
+		origin: '*',
+		credentials: true,
+	})
 	const config = new DocumentBuilder()
 		.setTitle('E-Nutrition APIs')
 		.setDescription('put short description for your apis collection')
