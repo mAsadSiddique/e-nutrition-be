@@ -28,7 +28,6 @@ var RESPONSE_MESSAGES;
     RESPONSE_MESSAGES["UserPasswordReset"] = "User password reset successfully";
     RESPONSE_MESSAGES["UserAlreadyExist"] = "User already exist";
     // Admin
-    RESPONSE_MESSAGES["ADMIN_REGISTERED"] = "admin registered successfully";
     RESPONSE_MESSAGES["ADMIN_ALREADY_EXIST"] = "admin already registered with this email";
     RESPONSE_MESSAGES["ADMIN_NOT_FOUND"] = "admin not found";
     RESPONSE_MESSAGES["ADMIN_BLOCKED"] = "admin blocked successfully";
@@ -40,6 +39,7 @@ var RESPONSE_MESSAGES;
     RESPONSE_MESSAGES["PHONE_NUMBER_NOT_SUPPORTED"] = "Phone number is not supported yet";
     RESPONSE_MESSAGES["ADMIN_LISTING"] = "Admins listing";
     RESPONSE_MESSAGES["ADMIN_ROLE_UPDATED"] = "Admin role updated successfully";
+    RESPONSE_MESSAGES["ADMIN_REGISTERED"] = "Admin registered successfully. Credentials sent to email";
     // Password
     RESPONSE_MESSAGES["PASSWORD_NOT_MATCHED"] = "password and confirm password must matched";
     RESPONSE_MESSAGES["INVALID_CREDENTIALS"] = "invalid Credentials";
@@ -75,6 +75,7 @@ var RESPONSE_MESSAGES;
     RESPONSE_MESSAGES["UserPhoneNumAlreadyVerified"] = "User phone number already verified successfully";
     RESPONSE_MESSAGES["PhoneVerificationPending"] = "Please verify your phone number. Check your messages for the verification code.";
     RESPONSE_MESSAGES["PhoneResetCodeSent"] = "Reset password code sent to your phone, please check your messages";
+    RESPONSE_MESSAGES["SMS_VERIFICATION_CODE_SENT"] = "Verification code sent successfully. Please check your messages to verify your account.";
     // JWt
     RESPONSE_MESSAGES["JWT_EXPIRED"] = "your login session is expired, please login again";
     RESPONSE_MESSAGES["INVALID_SIGNATURE"] = "invalid verification signature";
