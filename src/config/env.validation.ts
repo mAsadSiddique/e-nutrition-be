@@ -44,6 +44,7 @@ export const envValidationSchema = z.object({
 
   // Suppord mails
   SUPPORT_SENDER_EMAIL: z.string(),
+  SECURITY_EMAIL: z.string(),
 
   // Logout routes (optional)
   ADMIN_LOGOUT_ROUTE: z.string().optional(),

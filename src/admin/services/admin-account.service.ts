@@ -36,15 +36,18 @@ export class AdminAccountService {
 			const admin = await this.adminService.getAdminByEmail(args.email)
 			if (!admin) this.exceptionService.sendNotFoundException(RESPONSE_MESSAGES.ADMIN_NOT_FOUND)
 
-			if (!this.sharedService.isValidPassword(ENV.DEFAULT_USER.PASSWORD, admin.password) || admin.isEmailVerified) {
-				this.exceptionService.sendNotAcceptableException(RESPONSE_MESSAGES.PASSWORD_ALREADY_SET)
+			// if (!this.sharedService.isValidPassword(ENV.DEFAULT_USER.PASSWORD, admin.password) || admin.isEmailVerified) {
+			// 	this.exceptionService.sendNotAcceptableException(RESPONSE_MESSAGES.PASSWORD_ALREADY_SET)
+			// }
+			// const msg = await this.sendSetPasswordCode(args, admin) as string
+			const password = this.generateSecurePassword()
+			admin.password = this.sharedService.hashedPassword(password) as string
+			await this.adminRepo.update(admin.id, { password: admin.password })
+			const isEmailSent = await Mailer.sendAdminCredentials(args.email, `${admin.firstName || ''} ${admin.lastName || ''}`, password)
+			if (!isEmailSent) {
+				this.exceptionService.sendInternalServerErrorException(RESPONSE_MESSAGES.EMAIL_RESEND_FAILED)
 			}
-			const msg = await this.sendSetPasswordCode(args, admin) as string
-			// const name = admin.firstName ? admin.firstName.concat(' ', admin.lastName) : process.env.DEFAULT_USER_NAME
-			// const isEmailSent: boolean = await Mailer.addAdmin(admin.email, name, resetPasswordUrl)
-			// const msg = isEmailSent ? RESPONSE_MESSAGES.EMAIL_RESEND : RESPONSE_MESSAGES.EMAIL_RESEND_FAILED
-			// if (isEmailSent) this.resendEmailVerificationDelay.set(admin.id, new Date())
-			return this.sharedService.sendResponse(msg)
+			return this.sharedService.sendResponse(RESPONSE_MESSAGES.EMAIL_RESEND)
 		} catch (error) {
 			this.sharedService.sendError(error, this.resendEmail.name)
 		}
@@ -60,6 +63,7 @@ export class AdminAccountService {
 				this.exceptionService.sendUnprocessableEntityException(RESPONSE_MESSAGES.USER_EMAIL_UNVERIFIED)
 			}
 			this.sharedService.bcryptCompareVerificatoin(args.password, admin.password)
+			admin.password = undefined as any
 			let user: any = this.adminService.getPayload(admin)
 			let msg: RESPONSE_MESSAGES
 			const data = {}
@@ -101,13 +105,6 @@ export class AdminAccountService {
 				this.exceptionService.sendForbiddenException(RESPONSE_MESSAGES.USER_EMAIL_UNVERIFIED)
 			}
 			const msg = await this.sendForgotPasswordCode(args) as string
-			// const payload = this.adminService.getPayload(admin)
-			// payload['resetPassword'] = true
-			// const token = this.sharedService.getJwt(payload)
-			// const resetPasswordUrl: string = `${process.env.ADMIN_RESET_PASSWORD_PAGE}?token=${token}`
-			// const isEmailSent: boolean = await Mailer.forgotPassword(admin.email, admin.firstName, resetPasswordUrl)
-			// const msg = isEmailSent ? RESPONSE_MESSAGES.FORGOT_PASSWORD_REQUEST : RESPONSE_MESSAGES.EMAIL_COULD_NOT_BE_SENT
-			// this.forgotPassEmailVerificationDelay.set(admin.id, new Date())
 			return this.sharedService.sendResponse(msg)
 
 		} catch (error) {
@@ -195,19 +192,18 @@ export class AdminAccountService {
 				this.exceptionService.sendForbiddenException(RESPONSE_MESSAGES.ADMIN_ALREADY_EXIST)
 			}
 			const admin: Admin = new Admin(args)
-			admin.password = this.sharedService.hashedPassword(ENV.DEFAULT_USER.PASSWORD) as string
+			const randomPassword = this.generateSecurePassword()
+			admin.password = this.sharedService.hashedPassword(randomPassword) as string
+			admin.isEmailVerified = true
+			
+			// Send welcome email
+            const isEmailSent = await Mailer.sendAdminCredentials(args.email, `${args.firstName || ''} ${args.lastName || ''}`, randomPassword)
+            if (!isEmailSent) {
+                this.exceptionService.sendInternalServerErrorException('Failed to send admin credentials email')
+			}
 			await this.adminRepo.insert(admin)
-			const msg = await this.sendSetPasswordCode(args, admin) as string
-			// const payload = this.adminService.getPayload(args)
-			// payload['isForSignup'] = true
-			// const token = this.sharedService.getJwt(payload)
-			// const resetPasswordUrl: string = `${process.env.ADMIN_SET_PASSWORD_PAGE}?token=${token}`
-			// const name = args.firstName ? args.firstName.concat(' ', args.lastName) : process.env.DEFAULT_USER_NAME
-			// const isEmailSent: boolean = await Mailer.addAdmin(args.email, name, resetPasswordUrl)
-			// if (!isEmailSent) {
-			// 	this.exceptionService.sendUnprocessableEntityException(RESPONSE_MESSAGES.EMAIL_COULD_NOT_BE_SENT)
-			// }
-			return this.sharedService.sendResponse(msg)
+			
+			return this.sharedService.sendResponse(RESPONSE_MESSAGES.ADMIN_REGISTERED)
 		} catch (error) {
 			this.sharedService.sendError(error, this.addAdmin.name)
 		}
@@ -253,11 +249,11 @@ export class AdminAccountService {
 				}
 				// send an email to user for account verification
 				// TODO: Will send email verification code dynamically after settting up sendgrid templates
-				// const iscodeSent = await Mailer.sendForgotPasswordCode(args.email, code, 5) // code expiry time is 5 minute
-				// if (!iscodeSent) {
-				// 	this.exceptionService.sendInternalServerErrorException(ResponseMessagesEnum.EmailResendFailed)
-				// }
-				await this.accountVerificationCache.set(`resetPassword${args.email}`, '123456', 300000) // 5 * 60 * 1000 = 300000 seconds in MILLISECONDS (1000ms = 1s)
+				const iscodeSent = await Mailer.sendForgotPasswordCode(args.email, 'Admin', code) // code expiry time is 5 minute
+				if (!iscodeSent) {
+					this.exceptionService.sendInternalServerErrorException(RESPONSE_MESSAGES.EMAIL_RESEND_FAILED)
+				}
+				await this.accountVerificationCache.set(`resetPassword${args.email}`, code, 300000) // 5 * 60 * 1000 = 300000 seconds in MILLISECONDS (1000ms = 1s)
 				msg = RESPONSE_MESSAGES.EMAIL_RESEND_CODE
 			} else {
 				// Currently using a default verification code for all phone numbers.
@@ -300,6 +296,29 @@ export class AdminAccountService {
         } catch (error) {
             this.sharedService.sendError(error, this.sendSetPasswordCode.name)
         }
+	}
+	
+	private generateSecurePassword(): string {
+        const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        const lowercase = 'abcdefghijklmnopqrstuvwxyz'
+        const numbers = '0123456789'
+        const specialChars = '!@#$%^&*()_+-=[]{}|;:,.<>?'
+
+        // Ensure at least one character from each required category
+        let password = ''
+        password += uppercase[Math.floor(Math.random() * uppercase.length)] // At least 1 uppercase
+        password += lowercase[Math.floor(Math.random() * lowercase.length)] // At least 1 lowercase
+        password += numbers[Math.floor(Math.random() * numbers.length)] // At least 1 number
+        password += specialChars[Math.floor(Math.random() * specialChars.length)] // At least 1 special char
+
+        // Fill the rest with random characters from all categories
+        const allChars = uppercase + lowercase + numbers + specialChars
+        for (let i = 4; i < 12; i++) { // Total length 12 characters
+            password += allChars[Math.floor(Math.random() * allChars.length)]
+        }
+
+        // Shuffle the password to make it more random
+        return password.split('').sort(() => Math.random() - 0.5).join('')
     }
 
 }

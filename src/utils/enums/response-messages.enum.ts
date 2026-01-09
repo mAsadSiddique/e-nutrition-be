@@ -29,7 +29,6 @@ export enum RESPONSE_MESSAGES {
 
 
 	// Admin
-	ADMIN_REGISTERED = 'admin registered successfully',
 	ADMIN_ALREADY_EXIST = 'admin already registered with this email',
 	ADMIN_NOT_FOUND = 'admin not found',
 	ADMIN_BLOCKED = 'admin blocked successfully',
@@ -41,6 +40,8 @@ export enum RESPONSE_MESSAGES {
 	PHONE_NUMBER_NOT_SUPPORTED = 'Phone number is not supported yet',	
 	ADMIN_LISTING = 'Admins listing',
 	ADMIN_ROLE_UPDATED = 'Admin role updated successfully',
+	ADMIN_REGISTERED = 'Admin registered successfully. Credentials sent to email',
+
 	// Password
 	PASSWORD_NOT_MATCHED = 'password and confirm password must matched',
 	INVALID_CREDENTIALS = 'invalid Credentials',
@@ -81,7 +82,7 @@ export enum RESPONSE_MESSAGES {
 	UserPhoneNumAlreadyVerified = 'User phone number already verified successfully',
 	PhoneVerificationPending = 'Please verify your phone number. Check your messages for the verification code.',
 	PhoneResetCodeSent = 'Reset password code sent to your phone, please check your messages',
-
+	SMS_VERIFICATION_CODE_SENT = 'Verification code sent successfully. Please check your messages to verify your account.',
 	// JWt
 	JWT_EXPIRED = 'your login session is expired, please login again',
 	INVALID_SIGNATURE = 'invalid verification signature',

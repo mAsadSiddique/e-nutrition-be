@@ -56,6 +56,7 @@ var constant_1 = require("src/config/constant");
 var randomString = require("randomstring");
 var cache_manager_1 = require("@nestjs/cache-manager");
 var response_messages_enum_1 = require("src/utils/enums/response-messages.enum");
+var mailer_1 = require("src/utils/mailer/mailer");
 /**
  * Service responsible for user account management operations including:
  * - User registration
@@ -197,8 +198,8 @@ var UserAccountService = /** @class */ (function () {
                                     firstName: true,
                                     lastName: true,
                                     address: true,
-                                    status: true,
                                     password: true,
+                                    status: true,
                                     profileImage: { url: true },
                                     userType: true,
                                     userVerifications: true
@@ -234,6 +235,7 @@ var UserAccountService = /** @class */ (function () {
                             this.logger.warn("Invalid password attempt for user: " + user.id);
                             this.exceptionService.sendForbiddenException(response_messages_enum_1.RESPONSE_MESSAGES.INVALID_PASSWORD);
                         }
+                        user.password = undefined;
                         this.logger.log("User logged in successfully: " + user.id);
                         return [4 /*yield*/, this.generateJwtAndSendResponse(user, false)]; // returning false as it's normal login not for verification
                     case 2: return [2 /*return*/, _a.sent()]; // returning false as it's normal login not for verification
@@ -846,7 +848,7 @@ var UserAccountService = /** @class */ (function () {
     UserAccountService.prototype.createVerificationCacheData = function () {
         var code = randomString.generate({ length: 6, charset: 'numeric' });
         return {
-            code: '123456',
+            code: code,
             // code, // Uncomment this when ready to use dynamic codes
             expiredAt: Date.now() + 300000
         };
@@ -892,105 +894,91 @@ var UserAccountService = /** @class */ (function () {
     };
     UserAccountService.prototype.sendAccountVerificationCode = function (args, user) {
         return __awaiter(this, void 0, void 0, function () {
-            var msg, error_15;
+            var msg, code, isVerificationSent, code, error_15;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        _a.trys.push([0, 5, , 6]);
+                        _a.trys.push([0, 6, , 7]);
                         msg = void 0;
                         this.logger.debug("Verification code generated for user : " + args.email);
-                        if (!args.email) return [3 /*break*/, 2];
+                        if (!args.email) return [3 /*break*/, 3];
                         if (user.userVerifications.email) {
                             this.logger.warn("User email already verified: " + user.id);
                             this.exceptionService.sendNotAcceptableException(response_messages_enum_1.RESPONSE_MESSAGES.EMAIL_ALREADY_VERIFIED);
                         }
-                        // Use consolidated cache management
                         return [4 /*yield*/, this.verifyAndSetCacheData("verify" + args.email)
                             // send an email to user for account verification
-                            // TODO: Will send email verification code dynamically after settting up sendgrid templates
-                            // const isVerificationSent = await Mailer.sendEmailVerificationCode(args.email, code, 5) // code expiry time is 5 minute
-                            // if (!isVerificationSent) {
-                            // 	this.exceptionService.sendInternalServerErrorException(RESPONSE_MESSAGES.VerificationCodeFailed)
-                            // }
                         ];
                     case 1:
-                        // Use consolidated cache management
-                        _a.sent();
-                        // send an email to user for account verification
-                        // TODO: Will send email verification code dynamically after settting up sendgrid templates
-                        // const isVerificationSent = await Mailer.sendEmailVerificationCode(args.email, code, 5) // code expiry time is 5 minute
-                        // if (!isVerificationSent) {
-                        // 	this.exceptionService.sendInternalServerErrorException(RESPONSE_MESSAGES.VerificationCodeFailed)
-                        // }
-                        msg = response_messages_enum_1.RESPONSE_MESSAGES.EmailVerificationCodeSent;
-                        return [3 /*break*/, 4];
+                        code = _a.sent();
+                        return [4 /*yield*/, mailer_1.Mailer.sendEmailVerificationCode(args.email, (user.firstName || '') + " " + (user.lastName || ''), code)]; // code expiry time is 5 minute
                     case 2:
+                        isVerificationSent = _a.sent() // code expiry time is 5 minute
+                        ;
+                        if (!isVerificationSent) {
+                            this.exceptionService.sendInternalServerErrorException(response_messages_enum_1.RESPONSE_MESSAGES.EMAIL_RESEND_FAILED);
+                        }
+                        msg = response_messages_enum_1.RESPONSE_MESSAGES.EMAIL_VERIFICATION_CODE_SENT;
+                        return [3 /*break*/, 5];
+                    case 3:
                         // Currently using a default verification code '123456' for all phone numbers.
                         if (user.userVerifications.phoneNumber) {
                             this.logger.warn("User phone number already verified: " + user.id);
                             this.exceptionService.sendNotAcceptableException(response_messages_enum_1.RESPONSE_MESSAGES.UserPhoneNumAlreadyVerified);
                         }
-                        // Use consolidated cache management
                         return [4 /*yield*/, this.verifyAndSetCacheData("verify" + args.phoneNumber)];
-                    case 3:
-                        // Use consolidated cache management
-                        _a.sent();
-                        msg = response_messages_enum_1.RESPONSE_MESSAGES.PhoneVerificationCodeSent;
-                        _a.label = 4;
-                    case 4: return [2 /*return*/, msg];
-                    case 5:
+                    case 4:
+                        code = _a.sent();
+                        msg = response_messages_enum_1.RESPONSE_MESSAGES.SMS_VERIFICATION_CODE_SENT;
+                        _a.label = 5;
+                    case 5: return [2 /*return*/, msg];
+                    case 6:
                         error_15 = _a.sent();
                         this.sharedService.sendError(error_15, this.sendAccountVerificationCode.name);
-                        return [3 /*break*/, 6];
-                    case 6: return [2 /*return*/];
+                        return [3 /*break*/, 7];
+                    case 7: return [2 /*return*/];
                 }
             });
         });
     };
     UserAccountService.prototype.sendForgotPasswordCode = function (args) {
         return __awaiter(this, void 0, void 0, function () {
-            var msg, error_16;
+            var msg, code, iscodeSent, error_16;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        _a.trys.push([0, 5, , 6]);
+                        _a.trys.push([0, 6, , 7]);
                         msg = void 0;
                         this.logger.debug("Verification code generated for user : " + args.email);
-                        if (!args.email) return [3 /*break*/, 2];
-                        // Use consolidated cache management
+                        if (!args.email) return [3 /*break*/, 3];
                         return [4 /*yield*/, this.verifyAndSetCacheData("resetPassword" + args.email)
                             // send an email to user for account verification
-                            // TODO: Will send email verification code dynamically after settting up sendgrid templates
-                            // const iscodeSent = await Mailer.sendForgotPasswordCode(args.email, code, 5) // code expiry time is 5 minute
-                            // if (!iscodeSent) {
-                            // 	this.exceptionService.sendInternalServerErrorException(RESPONSE_MESSAGES.EmailResendFailed)
-                            // }
                         ];
                     case 1:
-                        // Use consolidated cache management
-                        _a.sent();
-                        // send an email to user for account verification
-                        // TODO: Will send email verification code dynamically after settting up sendgrid templates
-                        // const iscodeSent = await Mailer.sendForgotPasswordCode(args.email, code, 5) // code expiry time is 5 minute
-                        // if (!iscodeSent) {
-                        // 	this.exceptionService.sendInternalServerErrorException(RESPONSE_MESSAGES.EmailResendFailed)
-                        // }
+                        code = _a.sent();
+                        return [4 /*yield*/, mailer_1.Mailer.sendForgotPasswordCode(args.email, 'User', code)]; // code expiry time is 5 minute
+                    case 2:
+                        iscodeSent = _a.sent() // code expiry time is 5 minute
+                        ;
+                        if (!iscodeSent) {
+                            this.exceptionService.sendInternalServerErrorException(response_messages_enum_1.RESPONSE_MESSAGES.EMAIL_RESEND_FAILED);
+                        }
                         msg = response_messages_enum_1.RESPONSE_MESSAGES.EmailResetCodeSent;
-                        return [3 /*break*/, 4];
-                    case 2: 
+                        return [3 /*break*/, 5];
+                    case 3: 
                     // Use consolidated cache management
                     return [4 /*yield*/, this.verifyAndSetCacheData("resetPassword" + args.phoneNumber)];
-                    case 3:
+                    case 4:
                         // Use consolidated cache management
                         _a.sent();
                         msg = response_messages_enum_1.RESPONSE_MESSAGES.PhoneResetCodeSent;
-                        _a.label = 4;
-                    case 4: return [2 /*return*/, msg];
-                    case 5:
+                        _a.label = 5;
+                    case 5: return [2 /*return*/, msg];
+                    case 6:
                         error_16 = _a.sent();
                         this.sharedService.sendError(error_16, this.sendForgotPasswordCode.name);
-                        return [3 /*break*/, 6];
-                    case 6: return [2 /*return*/];
+                        return [3 /*break*/, 7];
+                    case 7: return [2 /*return*/];
                 }
             });
         });
