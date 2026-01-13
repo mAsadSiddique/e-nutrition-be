@@ -11,6 +11,26 @@ if (!parsed.success) {
     throw new Error('Environment validation error. Check your .env file.');
 }
 var env = parsed.data;
+/**
+ * Parse file size string to bytes
+ * @param sizeStr - Size string like "5MB", "100MB", "1GB"
+ * @returns Size in bytes
+ */
+function parseFileSize(sizeStr) {
+    var units = {
+        B: 1,
+        KB: 1024,
+        MB: 1024 * 1024,
+        GB: 1024 * 1024 * 1024
+    };
+    var match = sizeStr.trim().match(/^(\d+(?:\.\d+)?)\s*(B|KB|MB|GB)$/i);
+    if (!match) {
+        throw new Error("Invalid file size format: " + sizeStr);
+    }
+    var value = parseFloat(match[1]);
+    var unit = match[2].toUpperCase();
+    return Math.floor(value * units[unit]);
+}
 exports.ENV = {
     NODE_ENV: env.NODE_ENV,
     PORT: Number(env.PORT),
@@ -22,7 +42,8 @@ exports.ENV = {
         NAME: env.DB_NAME,
         TYPE: env.DB_TYPE,
         MAX_POOL_SIZE: env.MAX_POOL_SIZE,
-        MIN_POOL_SIZE: env.MIN_POOL_SIZE
+        MIN_POOL_SIZE: env.MIN_POOL_SIZE,
+        SSL: env.DB_SSL === 'true'
     },
     JWT: {
         SECRET: env.JWT_SECRET,
@@ -42,14 +63,15 @@ exports.ENV = {
         PASSWORD: env.DEFAULT_PASSWORD
     },
     FILE_SIZE: {
-        IMAGE_FILE_SIZE: env.IMAGE_FILE_SIZE,
-        VIDEO_FILE_SIZE: env.VIDEO_FILE_SIZE,
-        AUDIO_FILE_SIZE: env.AUDIO_FILE_SIZE,
-        FIELD_SIZE: env.IMAGE_FIELD_SIZE
+        IMAGE_FILE_SIZE: parseFileSize(env.IMAGE_FILE_SIZE),
+        VIDEO_FILE_SIZE: parseFileSize(env.VIDEO_FILE_SIZE),
+        AUDIO_FILE_SIZE: parseFileSize(env.AUDIO_FILE_SIZE),
+        FIELD_SIZE: parseFileSize(env.IMAGE_FIELD_SIZE)
     },
     EMAIL_CONFIG: {
         SEND_GRID_API_KEY: env.SEND_GRID_API_KEY,
-        SUPPORT_SENDER_EMAIL: env.SUPPORT_SENDER_EMAIL
+        SUPPORT_SENDER_EMAIL: env.SUPPORT_SENDER_EMAIL,
+        SECURITY_EMAIL: env.SECURITY_EMAIL
     },
     GOOGLE_LOGIN: {
         CLIENT_ID: env.GOOGLE_CLIENT_ID,

@@ -735,7 +735,7 @@ var SharedService = /** @class */ (function () {
         return result;
     };
     SharedService.prototype.uploadMultipleFileToS3Bucket = function (mediaFiles, dims, isCompressable) {
-        if (isCompressable === void 0) { isCompressable = true; }
+        if (isCompressable === void 0) { isCompressable = false; }
         return __awaiter(this, void 0, void 0, function () {
             var requests, keys, _i, _a, _b, objKey, files, _c, files_2, file, mimetype, key, compressedData, _d, param, error_11;
             return __generator(this, function (_e) {

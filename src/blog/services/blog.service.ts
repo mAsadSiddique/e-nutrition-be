@@ -571,12 +571,8 @@ export class BlogService {
 			const [blogs, total] = await queryBuilder.getManyAndCount()
 
 			// Enrich blogs with categories if IDs are provided
-			if ((args.ids?.length || args.id) && blogs.length > 0) {
-				for (const blog of blogs) {
-					if (blog.categories?.length) {
-						blog.categories = await this.categoryRepo.findBy({id: In(blog.categories)}) as any
-					}
-				}
+			if ((args.ids?.length === 1 || args.id) && blogs?.[0]?.categories?.length) {
+				blogs[0].categories = await this.categoryRepo.findBy({id: In(blogs[0].categories)}) as any
 			}
 
 			// Enrich blogs with media URLs
