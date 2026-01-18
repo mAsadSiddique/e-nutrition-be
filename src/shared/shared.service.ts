@@ -611,7 +611,7 @@ export class SharedService {
 		return result
 	}
 
-	async uploadMultipleFileToS3Bucket(mediaFiles: Array<Express.Multer.File> | {[key: string]: Express.Multer.File[]}, dims: ImgDimDTO | undefined, isCompressable = true) {
+	async uploadMultipleFileToS3Bucket(mediaFiles: Array<Express.Multer.File> | {[key: string]: Express.Multer.File[]}, dims: ImgDimDTO | undefined, isCompressable = false) {
 		try {
 			const requests: Promise<S3.PutObjectOutput>[] = []
 			const keys = {}

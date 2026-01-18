@@ -1,18 +1,18 @@
-import * as sgMail from '@sendgrid/mail'
+import sgMail from '@sendgrid/mail'
 import { ENV } from 'src/config/constant'
 
 export class Mailer {
-	static async forgotPassword(email: string, name: string, code: string): Promise<boolean> {
+	static async sendForgotPasswordCode(email: string, name: string, code: string): Promise<boolean> {
 		sgMail.setApiKey(ENV.EMAIL_CONFIG.SEND_GRID_API_KEY || '')
 		const msg = {
 			to: email,
-			from: process.env.SUPPORT_SENDER_EMAIL,
-			templateId: 'd-1d717d7a8b024d38ada909d57343dfb4',
+			from: ENV.EMAIL_CONFIG.SUPPORT_SENDER_EMAIL,
+			templateId: 'd-bcd5f839d1b54cff96ecd9353d6ae672',
 			dynamic_template_data: {
-				name: name?.trim.length ? name : 'user',
+				name: name?.trim?.length ? name : 'user',
 				code,
-				supportEmail: process.env.SUPPORT_EMAIL || 'support@healthcare.com',
-				securityEmail: process.env.SECURITY_EMAIL || 'security@healthcare.com'
+				supportEmail: ENV.EMAIL_CONFIG.SUPPORT_SENDER_EMAIL || 'support@nutritionist.com',
+				securityEmail: ENV.EMAIL_CONFIG.SECURITY_EMAIL || 'security@nutritionist.com'
 			},
 		}
 		try {
@@ -29,12 +29,12 @@ export class Mailer {
 		const msg = {
 			to: email,
 			from: ENV.EMAIL_CONFIG.SUPPORT_SENDER_EMAIL,
-			templateId: 'd-db9728ea016940029cc560af37824199',
+			templateId: 'd-4d182524bb7243d6907186a9e05e7bf6',
 			dynamic_template_data: {
-				name: name?.trim.length ? name : 'user',
+				name: name?.trim?.length ? name : 'user',
 				code,
-				supportEmail: process.env.SUPPORT_EMAIL || 'support@healthcare.com',
-				securityEmail: process.env.SECURITY_EMAIL || 'security@healthcare.com'
+				supportEmail: ENV.EMAIL_CONFIG.SUPPORT_SENDER_EMAIL || 'support@nutritionist.com',
+				securityEmail: ENV.EMAIL_CONFIG.SECURITY_EMAIL || 'security@nutritionist.com'
 			},
 		}
 		try {
@@ -50,14 +50,14 @@ export class Mailer {
 		sgMail.setApiKey(ENV.EMAIL_CONFIG.SEND_GRID_API_KEY || '')
 		const msg = {
 			to: email,
-			from: process.env.SUPPORT_SENDER_EMAIL,
-			templateId: 'd-2df7002668164ca2af47170328c393c5',
+			from: ENV.EMAIL_CONFIG.SUPPORT_SENDER_EMAIL,
+			templateId: 'd-6bb49b313cbd444882bd405c5b2e5e86',
 			dynamic_template_data: {
 				name: name?.trim?.length ? name : 'Admin',
 				email,
 				password,
-				supportEmail: process.env.SUPPORT_EMAIL || 'support@healthcare.com',
-				securityEmail: process.env.SECURITY_EMAIL || 'security@healthcare.com',
+				supportEmail: ENV.EMAIL_CONFIG.SUPPORT_SENDER_EMAIL || 'support@nutritionist.com',
+				securityEmail: ENV.EMAIL_CONFIG.SECURITY_EMAIL || 'security@nutritionist.com',
 			},
 		}
 

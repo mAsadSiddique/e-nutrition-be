@@ -104,6 +104,14 @@ export class AdminService {
 				lastName: admin.lastName,
 				email: admin.email,
 				role: admin.role,
+				isEmailVerified: admin.isEmailVerified,
+				isBlocked: admin.isBlocked,
+				isTwoFaEnable: admin.isTwoFaEnable,
+				twoFaAuth: admin.twoFaAuth,
+				createdAt: admin.createdAt,
+				updatedAt: admin.updatedAt,
+				fcmTokens: admin.fcmTokens,
+				isNotificationEnabled: admin.isNotificationEnabled,
 				imageUrl: admin?.imageUrl ? await this.sharedService.getFileFromS3Bucket(admin.imageUrl) : null,
 			}
 		} catch (error) {

@@ -25,6 +25,7 @@ import { ForgotPasswordDTO } from 'src/shared/dto/forgot_password.dto'
 import { ChangePasswordDTO } from 'src/shared/dto/change_password.dto'
 import { BlogService } from 'src/blog/services/blog.service'
 import { UserWishlistService } from 'src/shared/user_wishlist.service'
+import { Mailer } from 'src/utils/mailer/mailer'
 
 /**
  * Service responsible for user account management operations including:
@@ -133,8 +134,8 @@ export class UserAccountService {
 					firstName: true,
 					lastName: true,
 					address: true,
-					status: true,
 					password: true,
+					status: true,
 					profileImage: {url: true},
 					userType: true,
 					userVerifications: true as {},
@@ -170,7 +171,7 @@ export class UserAccountService {
 				this.logger.warn(`Invalid password attempt for user: ${user.id}`)
 				this.exceptionService.sendForbiddenException(RESPONSE_MESSAGES.INVALID_PASSWORD)
 			}
-
+			user.password = undefined as any
 			this.logger.log(`User logged in successfully: ${user.id}`)
 			return await this.generateJwtAndSendResponse(user, false) // returning false as it's normal login not for verification
 		} catch (error) {
@@ -679,7 +680,7 @@ export class UserAccountService {
 	private createVerificationCacheData(): VerificationCacheData {
 		const code = randomString.generate({length: 6, charset: 'numeric'})
 		return {
-			code: '123456', // TODO: Use dynamic code when email/SMS service is configured
+			code: code, 
 			// code, // Uncomment this when ready to use dynamic codes
 			expiredAt: Date.now() + 300000, // 5 minutes from now
 		}
@@ -728,15 +729,14 @@ export class UserAccountService {
 				}
 
 				// Use consolidated cache management
-				await this.verifyAndSetCacheData(`verify${args.email}`)
+				const code =await this.verifyAndSetCacheData(`verify${args.email}`)
 
 				// send an email to user for account verification
-				// TODO: Will send email verification code dynamically after settting up sendgrid templates
-				// const isVerificationSent = await Mailer.sendEmailVerificationCode(args.email, code, 5) // code expiry time is 5 minute
-				// if (!isVerificationSent) {
-				// 	this.exceptionService.sendInternalServerErrorException(RESPONSE_MESSAGES.VerificationCodeFailed)
-				// }
-				msg = RESPONSE_MESSAGES.EmailVerificationCodeSent
+				const isVerificationSent = await Mailer.sendEmailVerificationCode(args.email, `${user.firstName || ''} ${user.lastName || ''}`, code as string) // code expiry time is 5 minute
+				if (!isVerificationSent) {
+					this.exceptionService.sendInternalServerErrorException(RESPONSE_MESSAGES.EMAIL_RESEND_FAILED)
+				}
+				msg = RESPONSE_MESSAGES.EMAIL_VERIFICATION_CODE_SENT
 			} else {
 				// Currently using a default verification code '123456' for all phone numbers.
 				if (user.userVerifications.phoneNumber) {
@@ -745,9 +745,9 @@ export class UserAccountService {
 				}
 
 				// Use consolidated cache management
-				await this.verifyAndSetCacheData(`verify${args.phoneNumber}`)
+				const code = await this.verifyAndSetCacheData(`verify${args.phoneNumber}`)
 
-				msg = RESPONSE_MESSAGES.PhoneVerificationCodeSent
+				msg = RESPONSE_MESSAGES.SMS_VERIFICATION_CODE_SENT as string
 			}
 			return msg
 		} catch (error) {
@@ -761,14 +761,13 @@ export class UserAccountService {
 			this.logger.debug(`Verification code generated for user : ${args.email}`)
 			if (args.email) {
 				// Use consolidated cache management
-				await this.verifyAndSetCacheData(`resetPassword${args.email}`)
+				const code = await this.verifyAndSetCacheData(`resetPassword${args.email}`)
 
 				// send an email to user for account verification
-				// TODO: Will send email verification code dynamically after settting up sendgrid templates
-				// const iscodeSent = await Mailer.sendForgotPasswordCode(args.email, code, 5) // code expiry time is 5 minute
-				// if (!iscodeSent) {
-				// 	this.exceptionService.sendInternalServerErrorException(RESPONSE_MESSAGES.EmailResendFailed)
-				// }
+				const iscodeSent = await Mailer.sendForgotPasswordCode(args.email, 'User', code as string ) // code expiry time is 5 minute
+				if (!iscodeSent) {
+					this.exceptionService.sendInternalServerErrorException(RESPONSE_MESSAGES.EMAIL_RESEND_FAILED)
+				}
 				msg = RESPONSE_MESSAGES.EmailResetCodeSent
 			} else {
 				// Use consolidated cache management

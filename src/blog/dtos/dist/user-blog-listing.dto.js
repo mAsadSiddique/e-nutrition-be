@@ -60,6 +60,23 @@ var UserBlogListingDTO = /** @class */ (function (_super) {
         }),
         class_validator_1.Length(1, 100)
     ], UserBlogListingDTO.prototype, "search");
+    __decorate([
+        swagger_1.ApiPropertyOptional({
+            description: 'Array of blog IDs to retrieve multiple blogs. Can be passed as comma-separated string (e.g., "1,2,3") or as array (e.g., [1,2,3])',
+            type: [Number],
+            example: [1, 2, 3],
+            required: false
+        }),
+        class_validator_1.IsOptional(),
+        class_transformer_1.Transform(function (_a) {
+            var value = _a.value;
+            return value === null || value === void 0 ? void 0 : value.split(',').map(Number);
+        }),
+        class_validator_1.IsArray(),
+        class_validator_1.ArrayMinSize(1),
+        class_validator_1.IsInt({ each: true }),
+        class_validator_1.IsPositive({ each: true })
+    ], UserBlogListingDTO.prototype, "ids");
     return UserBlogListingDTO;
 }(swagger_1.IntersectionType(pagination_dto_1.PaginationDTO, swagger_1.PartialType(id_dto_1.IdDTO), swagger_1.PartialType(swagger_1.PickType(create_blog_dto_1.CreateBlogDTO, ['tags', 'slug', 'categoryIds'])))));
 exports.UserBlogListingDTO = UserBlogListingDTO;

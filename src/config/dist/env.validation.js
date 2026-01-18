@@ -15,6 +15,7 @@ exports.envValidationSchema = zod_1.z.object({
     DB_TYPE: zod_1.z["enum"](['postgres'])["default"]('postgres'),
     MAX_POOL_SIZE: zod_1.z.coerce.number().optional(),
     MIN_POOL_SIZE: zod_1.z.coerce.number().optional(),
+    DB_SSL: zod_1.z.string().optional()["default"]('false'),
     // JWT
     JWT_SECRET: zod_1.z.string(),
     JWT_EXPIRES_IN: zod_1.z.string(),
@@ -38,6 +39,7 @@ exports.envValidationSchema = zod_1.z.object({
     SEND_GRID_API_KEY: zod_1.z.string(),
     // Suppord mails
     SUPPORT_SENDER_EMAIL: zod_1.z.string(),
+    SECURITY_EMAIL: zod_1.z.string(),
     // Logout routes (optional)
     ADMIN_LOGOUT_ROUTE: zod_1.z.string().optional(),
     USER_LOGOUT_ROUTE: zod_1.z.string().optional(),

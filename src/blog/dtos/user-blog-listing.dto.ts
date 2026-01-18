@@ -38,18 +38,7 @@ export class UserBlogListingDTO extends IntersectionType(PaginationDTO, PartialT
 		required: false
 	})
 	@IsOptional()
-	@Transform(({ value }) => {
-		if (!value) return undefined
-		if (typeof value === 'string') {
-			const ids = value.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id) && id > 0)
-			return ids.length > 0 ? ids : undefined
-		}
-		if (Array.isArray(value)) {
-			const ids = value.map(id => typeof id === 'string' ? parseInt(id, 10) : id).filter(id => !isNaN(id) && id > 0)
-			return ids.length > 0 ? ids : undefined
-		}
-		return undefined
-	})
+	@Transform(({ value }) => value?.split(',').map(Number))
 	@IsArray()
 	@ArrayMinSize(1)
 	@IsInt({ each: true })
