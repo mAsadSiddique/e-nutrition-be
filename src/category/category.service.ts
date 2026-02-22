@@ -91,9 +91,16 @@ export class CategoryService {
 			let categoriesToReturn
 			const repo = await this.getRepoObjByEntityName(entity)
 			if (args.id) {
-				categoriesToReturn = repo?  await repo.findOne({
-					where: { id: args.id },
-				}) : undefined
+				const category = repo ? await repo.findOne({ where: { id: args.id } }) : undefined
+				if (!category) this.exceptionService.sendNotFoundException(RESPONSE_MESSAGES.CATEGORY_NOT_FOUND)
+
+				if (args.childrenOnly) {
+					// Return only subcategories (children) of the given category
+					categoriesToReturn = await this.getChildrenOfCategory(args.id, entity)
+				} else {
+					// Return the category with all its subcategories attached
+					categoriesToReturn = await this.getCategoryWithChildren(args.id, entity)
+				}
 			} else {
 				if (entity === CategoryEntitiesEnum.CATEGORY) {
 					this.categoriesCache
@@ -205,6 +212,87 @@ export class CategoryService {
 		} catch (error) {
 			this.sharedService.sendError(error, this.getSubCategories.name)
 		}
+	}
+
+	private async getCategoryWithChildren(id: number, entity: CategoryEntitiesEnum) {
+		try {
+			const repo = await this.getRepoObjByEntityName(entity)
+			if (!repo) return undefined
+
+			const allDescendantIds = (await this.getAllChildCategoreisByParentId(id, entity)) ?? []
+			const categories = (await repo.find({
+				where: { id: In(allDescendantIds) },
+				order: { parentId: { direction: 'DESC', nulls: 'LAST' }, id: 'DESC' },
+			})) as Category[]
+
+			const tree = this.buildTreeFromCategories(categories, [id])
+			return tree[0] ?? null
+		} catch (error) {
+			this.sharedService.sendError(error, this.getCategoryWithChildren.name)
+		}
+	}
+
+	private async getChildrenOfCategory(id: number, entity: CategoryEntitiesEnum) {
+		try {
+			const repo = await this.getRepoObjByEntityName(entity)
+			if (!repo) return []
+
+			const directChildren = await repo.find({
+				where: { parentId: id },
+				select: { id: true },
+			})
+			if (directChildren.length === 0) return []
+
+			const directChildIds = directChildren.map((c) => c.id)
+			const allIds = new Set<number>(directChildIds)
+			for (const childId of directChildIds) {
+				const descendantIds = (await this.getAllChildCategoreisByParentId(childId, entity)) ?? []
+				descendantIds.forEach((d) => allIds.add(d))
+			}
+
+			const categories = (await repo.find({
+				where: { id: In([...allIds]) },
+				order: { parentId: { direction: 'DESC', nulls: 'LAST' }, id: 'DESC' },
+			})) as Category[]
+
+			return this.buildTreeFromCategories(categories, directChildIds)
+		} catch (error) {
+			this.sharedService.sendError(error, this.getChildrenOfCategory.name)
+		}
+	}
+
+	private buildTreeFromCategories(
+		categories: Category[],
+		rootIds: number[],
+	): { id: number; name: string; children: { id: number; name: string; children: unknown[] }[] }[] {
+		type CategoryNode = { id: number; name: string; children: CategoryNode[] }
+		const categoryMap = new Map<number, CategoryNode>()
+
+		for (const cat of categories) {
+			categoryMap.set(cat.id, {
+				id: cat.id,
+				name: cat.name,
+				children: [],
+			})
+		}
+
+		for (const cat of categories) {
+			const node = categoryMap.get(cat.id)
+			if (!node) continue
+			if (cat.parentId) {
+				const parent = categoryMap.get(cat.parentId)
+				if (parent) {
+					parent.children.push(node)
+				}
+			}
+		}
+
+		const result: CategoryNode[] = []
+		for (const rootId of rootIds) {
+			const node = categoryMap.get(rootId)
+			if (node) result.push(node)
+		}
+		return result
 	}
 
 	async getCategoryById(id: number, entity: CategoryEntitiesEnum) {
