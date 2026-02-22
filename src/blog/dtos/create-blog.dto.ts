@@ -31,7 +31,7 @@ export class CreateBlogDTO extends ImgsDimDTO {
 	excerpt: string
 
 	@ApiProperty({
-		description: 'Array of category IDs (at least one required for publishing)',
+		description: 'Array of category IDs (at least one required for publishing). Supports both parent categories and subcategories (children).',
 		example: [1, 2],
 		type: [Number]
 	})
