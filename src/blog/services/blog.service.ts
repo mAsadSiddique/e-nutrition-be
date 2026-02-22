@@ -12,6 +12,7 @@ import { UserBlogListingDTO, BlogSortBy } from '../dtos/user-blog-listing.dto';
 import { ExceptionService } from '../../shared/exception.service';
 import { SharedService } from '../../shared/shared.service';
 import { CategoryService } from '../../category/category.service';
+import { CategoryEntitiesEnum } from '../../utils/enums/category-entities.enum';
 import { RESPONSE_MESSAGES } from '../../utils/enums/response-messages.enum';
 import { generateSlug } from '../../utils/utils';
 import { User } from 'src/user/entities/user.entity';
@@ -430,9 +431,20 @@ export class BlogService {
       }
 
       if (categoryId) {
-        queryBuilder.andWhere('blog.categories @> :category', {
-          category: JSON.stringify([categoryId]),
-        });
+        // Include blogs in this category OR any of its subcategories
+        const categoryIdsWithDescendants =
+          (await this.categoryService.getAllChildCategoreisByParentId(
+            categoryId,
+            CategoryEntitiesEnum.CATEGORY,
+          )) ?? [categoryId];
+        queryBuilder.andWhere(
+          `EXISTS (
+            SELECT 1
+            FROM jsonb_array_elements(blog.categories) AS c
+            WHERE c::int = ANY(:categoryIds)
+          )`,
+          { categoryIds: categoryIdsWithDescendants },
+        );
       }
 
       if (status) {
@@ -441,7 +453,7 @@ export class BlogService {
 
       if (search) {
         queryBuilder.andWhere(
-          '(blog.title LIKE :search OR blog.seoTitle LIKE :search OR blog.excerpt LIKE :search OR blog.seoDescription LIKE :search)',
+          '(blog.title ILIKE :search OR blog.seoTitle ILIKE :search OR blog.excerpt ILIKE :search OR blog.seoDescription ILIKE :search)',
           { search: `%${search}%` },
         );
       }
@@ -671,20 +683,29 @@ export class BlogService {
       }
 
       if (args.categoryIds?.length) {
+        // Expand categoryIds to include subcategories (filter shows blogs in category OR any descendant)
+        const expandedCategoryIds = new Set<number>();
+        for (const catId of args.categoryIds) {
+          const idsWithDescendants =
+            (await this.categoryService.getAllChildCategoreisByParentId(
+              catId,
+              CategoryEntitiesEnum.CATEGORY,
+            )) ?? [catId];
+          idsWithDescendants.forEach((id) => expandedCategoryIds.add(id));
+        }
         queryBuilder.andWhere(
-          `
-  			  	EXISTS (
-  			  	  SELECT 1 
-  			  	  FROM jsonb_array_elements(blog.categories) AS c
-  			  	  WHERE c::int = ANY(:categoryIds)
-  			  	)`,
-          { categoryIds: args.categoryIds },
+          `EXISTS (
+            SELECT 1
+            FROM jsonb_array_elements(blog.categories) AS c
+            WHERE c::int = ANY(:categoryIds)
+          )`,
+          { categoryIds: [...expandedCategoryIds] },
         );
       }
 
       if (args.search) {
         queryBuilder.andWhere(
-          '(blog.title LIKE :search OR blog.content LIKE :search OR blog.excerpt LIKE :search OR blog.seoTitle LIKE :search)',
+          '(blog.title ILIKE :search OR blog.content ILIKE :search OR blog.excerpt ILIKE :search OR blog.seoTitle ILIKE :search)',
           { search: `%${args.search}%` },
         );
       }

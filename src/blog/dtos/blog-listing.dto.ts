@@ -9,7 +9,7 @@ import { CreateBlogDTO } from './create-blog.dto'
 export class BlogListingDTO extends IntersectionType(PaginationDTO, PartialType(IdDTO), PickType(CreateBlogDTO, ['tags'])){
 
 	@ApiPropertyOptional({
-		description: 'Filter by category ID',
+		description: 'Filter by category ID. Returns blogs in this category or any of its subcategories.',
 		example: 1
 	})
 	@IsOptional()
