@@ -16,6 +16,7 @@ import {JwtService} from '@nestjs/jwt'
 import { RESPONSE_MESSAGES } from 'src/utils/enums/response-messages.enum'
 import { BlogService } from 'src/blog/services/blog.service'
 import { UserWishlistService } from 'src/shared/user_wishlist.service'
+import { DeleteAccountDTO } from '../dtos/delete_account.dto'
 
 @Injectable()
 export class UserService {
@@ -332,6 +333,26 @@ export class UserService {
 			return this.sharedService.sendResponse(RESPONSE_MESSAGES.SUCCESS, true)
 		} catch (error) {
 			this.sharedService.sendError(error, this.checkUserAvailability.name)
+		}
+	}
+
+	/**
+	 * Deletes a user account identified by email.
+	 *
+	 * @param args - Contains the email of the account to delete
+	 */
+	async deleteAccount(args: DeleteAccountDTO) {
+		try {
+			this.logger.log(`Deleting account for email: ${args.email}`)
+			const user = await this.userRepo.findOne({ where: { email: args.email } })
+			if (!user) {
+				this.exceptionService.sendNotFoundException(RESPONSE_MESSAGES.USER_NOT_FOUND)
+			}
+
+			await this.userRepo.delete({ id: user.id })
+			return this.sharedService.sendResponse(RESPONSE_MESSAGES.DELETED, null)
+		} catch (error) {
+			this.sharedService.sendError(error, this.deleteAccount.name)
 		}
 	}
 }
