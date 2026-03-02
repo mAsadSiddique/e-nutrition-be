@@ -1,4 +1,4 @@
-import {Body, Controller, Get, Logger, Post, Put, Req, Res, UploadedFiles, UseGuards} from '@nestjs/common'
+import {Body, Controller, Delete, Get, Logger, Post, Put, Req, Res, UploadedFiles, UseGuards} from '@nestjs/common'
 import {UserService} from '../services/user.service'
 import {ApiBody, ApiOperation} from '@nestjs/swagger'
 import {MockOkResponses} from 'src/utils/mock_swagger_responses/mock_ok.responses'
@@ -17,6 +17,7 @@ import {GoogleAuthGuard} from '../social_login-strategies/google.strategy'
 import {UserSocialLoginType} from 'src/utils/types/user_social_login.type'
 import type {Request, Response} from 'express'
 import {CheckUserAvailabilityDTO} from '../dtos/validate_user_existance.dto'
+import { DeleteAccountDTO } from '../dtos/delete_account.dto'
 import {ENV} from 'src/config/constant'
 import { RESPONSE_MESSAGES } from 'src/utils/enums/response-messages.enum'
 import { UserAuthGuard } from 'src/auth/guard/user_auth.guard'
@@ -189,5 +190,17 @@ export class UserController {
 	@Post('/availability')
 	async checkUserAvailability(@Body() args: CheckUserAvailabilityDTO) {
 		return await this.userService.checkUserAvailability(args)
+	}
+
+	@ApiOperation({
+		summary: 'Delete Account',
+		description: 'Deletes a user account based on the provided email.',
+	})
+	@ApiBody({ type: DeleteAccountDTO })
+	@MockErrorResponses.sendBbadRequestResponse()
+	@MockErrorResponses.sendInternalServerErrorResponse()
+	@Delete('/account')
+	async deleteAccount(@Body() args: DeleteAccountDTO) {
+		return await this.userService.deleteAccount(args)
 	}
 }
