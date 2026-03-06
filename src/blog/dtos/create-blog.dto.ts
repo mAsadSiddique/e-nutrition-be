@@ -19,7 +19,7 @@ export class CreateBlogDTO extends ImgsDimDTO {
 		example: '<p>Hi This is our testing body content</p><p>This is small heading.<br></p>'
 	})
 	@IsNotEmpty()
-	@Length(1,5000)
+	@Length(1, 7000)
 	content: string
 
 	@ApiPropertyOptional({
