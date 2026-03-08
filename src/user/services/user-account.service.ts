@@ -538,9 +538,26 @@ export class UserAccountService {
 			this.logger.log(`User verified successfully: ${user!.id}`, this.accountVerification.name)
 			this.logger.debug(`User verification status updated: ${JSON.stringify(user?.userVerifications)}`, this.accountVerification.name)
 
-			// Return success response with JWT token
+			// Re-fetch user with same shape as login (exclude password) and return JWT + user + wishlist so user is logged in
+			const verifiedUser = await this.userRepo.findOne({
+				select: {
+					id: true,
+					username: true,
+					email: true,
+					phoneNumber: true,
+					registrationType: true,
+					firstName: true,
+					lastName: true,
+					address: true,
+					status: true,
+					profileImage: {url: true},
+					userType: true,
+					userVerifications: true as {},
+				},
+				where: {id: user!.id},
+			}) as User
 			this.logger.log('Account verification completed successfully with JWT token', this.accountVerification.name)
-			return await this.generateJwtAndSendResponse(user as User, true) // returning true as it's for verification
+			return await this.generateJwtAndSendResponse(verifiedUser, true) // same response as login: jwt, user, userWishlist
 		} catch (error) {
 			this.sharedService.sendError(error, this.accountVerification.name)
 		}
