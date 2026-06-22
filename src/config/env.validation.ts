@@ -15,19 +15,23 @@ export const envValidationSchema = z.object({
   MAX_POOL_SIZE: z.coerce.number().optional(),
   MIN_POOL_SIZE: z.coerce.number().optional(),
   DB_SSL: z.string().optional().default('false'),
+  DB_SYNCHRONIZE: z
+    .string()
+    .optional()
+    .default('false')
+    .transform((v) => v === 'true'),
 
   // JWT
   JWT_SECRET: z.string(),
   JWT_EXPIRES_IN: z.string(),
   SALT_ROUNDS: z.coerce.number().default(10),
 
-  // S3 Bucket
-  BUCKET_NAME: z.string(),
-  BUCKET_REGION: z.string(),
-  BUCKET_ACCESS_KEY_ID: z.string(),
-  BUCKET_SECRET_ACCESS_KEY: z.string(),
-  BUCKET_ENDPOINT: z.string(),
-  INTERNAL_BUCKET_NAME: z.string(),
+  // AWS S3
+  AWS_S3_BUCKET_NAME: z.string(),
+  AWS_S3_REGION: z.string().default('ca-central-1'),
+  AWS_ACCESS_KEY_ID: z.string(),
+  AWS_SECRET_ACCESS_KEY: z.string(),
+  AWS_SES_REGION: z.string().default('ca-central-1'),
 
   // user config
   DEFAULT_USER_NAME: z.string(),

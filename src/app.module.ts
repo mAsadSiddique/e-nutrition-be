@@ -20,9 +20,10 @@ import { BlogModule } from './blog/blog.module';
       username: ENV.DB.USERNAME,
       password: ENV.DB.PASSWORD,
       database: ENV.DB.NAME,
-      synchronize: false,
-      logging: false,
+      synchronize: ENV.DB.SYNCHRONIZE,
+      logging: ENV.NODE_ENV !== 'production',
       autoLoadEntities: true,
+      ssl: ENV.DB.SSL ? { rejectUnauthorized: false } : false,
     }),
     CacheModule.register({
       isGlobal: true, // Makes the cache available across the entire 

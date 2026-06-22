@@ -27,7 +27,7 @@ export class CategoryService {
 	private categoriesCache: unknown
 	private productCategoriesCache: unknown
 
-	async createCategory(args: CreateCategoryDTO, entity: CategoryEntitiesEnum) {
+	async createCategory(args: CreateCategoryDTO, entity: CategoryEntitiesEnum, icon?: Express.Multer.File) {
 		try {
 			const repo = await this.getRepoObjByEntityName(entity)
 		
@@ -35,6 +35,10 @@ export class CategoryService {
 			let categoriesToBeReturn: {id: number,name: string, children:[] }[] = []
 
 			if (repo) {
+				const isParentCategory = args.parentId == null || args.parentId === undefined
+				if (isParentCategory && !icon) {
+					this.exceptionService.sendBadRequestException(RESPONSE_MESSAGES.CATEGORY_ICON_REQUIRED)
+				}
 				const existing = await repo.findOne({ where: { name: args.name } })
 				if (existing) {
 					this.exceptionService.sendConflictException(`${RESPONSE_MESSAGES.CATEGORY_ALREADY_EXIST_WITH_NAME}: ${args.name}`)
@@ -44,7 +48,10 @@ export class CategoryService {
 					if (!parentCategory) this.exceptionService.sendNotFoundException(RESPONSE_MESSAGES.PARENT_CATEGORY_NOT_FOUND)
 				}
 				if (entity === CategoryEntitiesEnum.CATEGORY) {
-					categoryToInsert = new Category(args)
+					categoryToInsert = new Category(args) as Category
+					if (icon) {
+						categoryToInsert.iconKey = await this.sharedService.uploadFileToS3Bucket(icon) as string
+					}
 					await repo.insert(categoryToInsert)
 					categoriesToBeReturn = this.categoriesCache = await this.fetchCategories(entity) as any
 				} else {
@@ -53,13 +60,13 @@ export class CategoryService {
 					// categoriesToBeReturn = this.productCategoriesCache = await this.fetchCategories(entity) as any
 				}
 			}
-			return this.sharedService.sendResponse(RESPONSE_MESSAGES.CATEGORY_REGISTERED, categoriesToBeReturn)
+			return this.sharedService.sendResponse(RESPONSE_MESSAGES.CATEGORY_REGISTERED, await this.enrichCategoriesWithIconUrls(categoriesToBeReturn))
 		} catch (error) {
 			this.sharedService.sendError(error, this.createCategory.name)
 		}
 	}
 
-	async updateCategory(args: UpdateCategoryDTO, entity: CategoryEntitiesEnum) {
+	async updateCategory(args: UpdateCategoryDTO, entity: CategoryEntitiesEnum, icon?: Express.Multer.File) {
 		try {
 			const repo = await this.getRepoObjByEntityName(entity)
 			let categoriesToBeReturn: { id: number, name: string, children: [] }[] = []
@@ -73,6 +80,9 @@ export class CategoryService {
 				}
 
 				Object.assign(category, args)
+				if (icon) {
+					category.iconKey = await this.sharedService.uploadFileToS3Bucket(icon) as string
+				}
 				await repo.update(category.id, category)
 				if (entity === CategoryEntitiesEnum.CATEGORY) {
 					categoriesToBeReturn = this.categoriesCache = await this.fetchCategories(entity) as any
@@ -80,7 +90,7 @@ export class CategoryService {
 					categoriesToBeReturn = this.productCategoriesCache = await this.fetchCategories(entity) as any
 				}
 			}
-			return this.sharedService.sendResponse(RESPONSE_MESSAGES.CATEGORY_UPDATED, categoriesToBeReturn)
+			return this.sharedService.sendResponse(RESPONSE_MESSAGES.CATEGORY_UPDATED, await this.enrichCategoriesWithIconUrls(categoriesToBeReturn))
 		} catch (error) {
 			this.sharedService.sendError(error, this.updateCategory.name)
 		}
@@ -112,7 +122,8 @@ export class CategoryService {
 						: (this.productCategoriesCache = categoriesToReturn = await this.fetchCategories(entity))
 				}
 			}
-			return this.sharedService.sendResponse(RESPONSE_MESSAGES.CATEGORIES_LISTING, categoriesToReturn)
+			const enriched = await this.enrichCategoriesWithIconUrls(categoriesToReturn)
+			return this.sharedService.sendResponse(RESPONSE_MESSAGES.CATEGORIES_LISTING, enriched)
 		} catch (error) {
 			this.sharedService.sendError(error, this.categoryListing.name)
 		}
@@ -165,7 +176,7 @@ export class CategoryService {
 
 	private async fetchCategories(entity: CategoryEntitiesEnum) {
 		try {
-			const categoriesToReturn: {id: number,name: string, children:[] }[] = []
+			const categoriesToReturn: { id: number; name: string; iconKey?: string | null; children: unknown[] }[] = []
 			const repo = await this.getRepoObjByEntityName(entity)
 			const categories = repo?  await repo.find({
 				order: { parentId: { direction: 'DESC', nulls: 'LAST' }, id: 'DESC' },
@@ -173,20 +184,22 @@ export class CategoryService {
 			for (const category of categories) {
 				if (category.parentId) {
 					const parentCategoryIndex = categories.findIndex(cat => cat.id === category.parentId)
+					if (parentCategoryIndex === -1) continue
+					const childNode = {
+						id: category.id,
+						name: category.name,
+						children: category['children'],
+						iconKey: category.iconKey ?? undefined,
+					}
 					categories[parentCategoryIndex]['children']
-						? categories[parentCategoryIndex]['children'].push({
-							id: category.id,
-							name: category.name,
-							children: category['children'],
-						})
-						: (categories[parentCategoryIndex]['children'] = [
-							{ id: category.id, name: category.name, children: category['children'] },
-						])
+						? categories[parentCategoryIndex]['children'].push(childNode)
+						: (categories[parentCategoryIndex]['children'] = [childNode])
 				} else {
 					categoriesToReturn.push({
 						id: category.id,
 						name: category.name,
 						children: category['children'],
+						iconKey: category.iconKey ?? undefined,
 					})
 				}
 			}
@@ -264,14 +277,15 @@ export class CategoryService {
 	private buildTreeFromCategories(
 		categories: Category[],
 		rootIds: number[],
-	): { id: number; name: string; children: { id: number; name: string; children: unknown[] }[] }[] {
-		type CategoryNode = { id: number; name: string; children: CategoryNode[] }
+	): { id: number; name: string; iconKey?: string | null; children: { id: number; name: string; iconKey?: string | null; children: unknown[] }[] }[] {
+		type CategoryNode = { id: number; name: string; iconKey?: string | null; children: CategoryNode[] }
 		const categoryMap = new Map<number, CategoryNode>()
 
 		for (const cat of categories) {
 			categoryMap.set(cat.id, {
 				id: cat.id,
 				name: cat.name,
+				iconKey: cat.iconKey ?? undefined,
 				children: [],
 			})
 		}
@@ -293,6 +307,33 @@ export class CategoryService {
 			if (node) result.push(node)
 		}
 		return result
+	}
+
+	private async enrichCategoriesWithIconUrls<T>(categories: T): Promise<T> {
+		if (!categories) return categories
+		if (Array.isArray(categories)) {
+			return (await Promise.all(
+				categories.map((category) => this.enrichCategoryNodeWithIconUrl(category)),
+			)) as T
+		}
+		return (await this.enrichCategoryNodeWithIconUrl(categories)) as T
+	}
+
+	private async enrichCategoryNodeWithIconUrl(
+		node: { iconKey?: string | null; children?: unknown[] },
+	): Promise<{ iconKey?: string | null; iconUrl?: string; children?: unknown[] }> {
+		const enriched: { iconKey?: string | null; iconUrl?: string; children?: unknown[] } = { ...node }
+		if (node.iconKey) {
+			enriched.iconUrl = await this.sharedService.getFileFromS3Bucket(node.iconKey)
+		}
+		if (node.children?.length) {
+			enriched.children = await Promise.all(
+				node.children.map((child) =>
+					this.enrichCategoryNodeWithIconUrl(child as { iconKey?: string | null; children?: unknown[] }),
+				),
+			)
+		}
+		return enriched
 	}
 
 	async getCategoryById(id: number, entity: CategoryEntitiesEnum) {
