@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common'
 import { ExceptionService } from './exception.service'
 import * as bcrypt from 'bcrypt'
 import * as jwt from 'jsonwebtoken'
-import { getWasabiS3Object } from '../utils/utils'
+import { getS3Object } from '../utils/utils'
 import * as crypto from 'crypto'
 import { PreviewableFileType } from '../utils/types/previewable_file.type'
 import { ObjectType } from '../utils/types/generic_types.type'
@@ -37,7 +37,7 @@ const IMAGE_CONSTANTS = {
 @Injectable()
 export class SharedService {
 	private readonly logger = new Logger(SharedService.name)
-	private readonly s3 = getWasabiS3Object()
+	private readonly s3 = getS3Object()
 
 	constructor(
 		private readonly exceptionService: ExceptionService) { }
@@ -246,6 +246,7 @@ export class SharedService {
 			Body: file.buffer,
 			Bucket: bucketName,
 			Key: key,
+			ContentType: file.mimetype,
 		}
 			await this.s3.putObject(params).promise()
 			return key
@@ -285,6 +286,7 @@ export class SharedService {
 					Body: file[0].buffer,
 					Bucket: bucketName,
 					Key: key,
+					ContentType: file[0].mimetype,
 				}
 				requests.push(this.s3.putObject(param).promise())
 			}
@@ -357,6 +359,7 @@ export class SharedService {
 					Body: file.buffer,
 					Bucket: bucketName,
 					Key: key,
+					ContentType: file.mimetype,
 				}
 				requests.push(this.s3.putObject(param).promise())
 				keys.push(key)
@@ -634,6 +637,7 @@ export class SharedService {
 						Body: compressedData,
 						Bucket: ENV.S3_BUCKET.NAME,
 						Key: key,
+						ContentType: file.mimetype,
 					}
 					requests.push(this.s3.putObject(param).promise())
 				}

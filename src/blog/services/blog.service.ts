@@ -121,11 +121,10 @@ export class BlogService {
 
       await this.blogRepo.insert(blog);
 
-      // const blogResponse = await this.enrichBlogWithMediaUrls(blog)
       blog.categories = categories as any;
-
+      const enrichedBlog = await this.enrichBlogMedia(blog)
       return this.sharedService.sendResponse(RESPONSE_MESSAGES.BLOG_CREATED, {
-        blog,
+        blog: enrichedBlog,
       });
     } catch (error) {
       this.sharedService.sendError(error, this.createBlog.name);
@@ -341,7 +340,7 @@ export class BlogService {
       await this.blogRepo.update({ id: blog.id }, blog);
 
       return this.sharedService.sendResponse(RESPONSE_MESSAGES.BLOG_UPDATED, {
-        blog,
+        blog: await this.enrichBlogMedia(blog),
       });
     } catch (error) {
       this.sharedService.sendError(error, this.updateBlog.name);
@@ -401,7 +400,8 @@ export class BlogService {
       await this.blogRepo.update({ id: blog.id }, blog);
 
       // const blogResponse = await this.enrichBlogWithMediaUrls(blog)
-      return this.sharedService.sendResponse(RESPONSE_MESSAGES.SUCCESS, blog);
+      const enrichedBlog = await this.enrichBlogMedia(blog)
+      return this.sharedService.sendResponse(RESPONSE_MESSAGES.SUCCESS, enrichedBlog);
     } catch (error) {
       this.sharedService.sendError(error, this.getBlogById.name);
     }
@@ -490,14 +490,13 @@ export class BlogService {
           id: In(blogs[0]?.categories),
         })) as any;
 
-      // Enrich blogs with media URLs
-      // const enrichedBlogs = await Promise.all(
-      // 	blogs.map(blog => this.enrichBlogWithMediaUrls(blog))
-      // )
+      const enrichedBlogs = await Promise.all(
+        blogs.map((blog) => this.enrichBlogMedia(blog)),
+      )
 
       return this.sharedService.sendResponse(RESPONSE_MESSAGES.BLOG_LISTING, {
         total,
-        blogs,
+        blogs: enrichedBlogs,
       });
     } catch (error) {
       this.sharedService.sendError(error, this.listBlogs.name);
@@ -738,18 +737,33 @@ export class BlogService {
         })) as any;
       }
 
-      // Enrich blogs with media URLs
-      // const enrichedBlogs = await Promise.all(
-      // 	blogs.map(blog => this.enrichBlogWithMediaUrls(blog))
-      // )
+      const enrichedBlogs = await Promise.all(
+        blogs.map((blog) => this.enrichBlogMedia(blog)),
+      )
 
       return this.sharedService.sendResponse(RESPONSE_MESSAGES.BLOG_LISTING, {
         total,
-        blogs,
+        blogs: enrichedBlogs,
       });
     } catch (error) {
       this.sharedService.sendError(error, this.getUserBlogs.name);
     }
+  }
+
+  private async enrichBlogMedia(blog: Blog): Promise<Blog> {
+    if (!blog.media?.images || !Object.keys(blog.media.images).length) {
+      return blog
+    }
+    const s3Keys = Object.keys(blog.media.images)
+    const keysWithValue = s3Keys.reduce<Record<string, string>>((acc, key) => {
+      acc[key] = key
+      return acc
+    }, {})
+    blog.media = {
+      ...blog.media,
+      images: await this.sharedService.getMultipleFilesFromS3Bucket(keysWithValue),
+    }
+    return blog
   }
 
   // private async processHtmlContent(content: string): Promise<string> {

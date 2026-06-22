@@ -1,43 +1,30 @@
 import { BadRequestException } from '@nestjs/common'
-import { Credentials, S3, SES, config } from 'aws-sdk'
+import { S3, SES } from 'aws-sdk'
 import { callbackType } from './types/generic_types.type'
 import { ENV } from 'src/config/constant'
 import { plainToInstance } from 'class-transformer'
 
 /**
- * @description returns Bucket S3 object
- * @author Waqar Hussain
+ * @description returns AWS S3 client (Canada region by default)
  */
 export const getS3Object = () => {
 	return new S3({
-		accessKeyId: process.env.AWS_ACCESSS_KEY_ID,
-		secretAccessKey: process.env.AWS_SECRET_KEY,
+		accessKeyId: ENV.S3_BUCKET.ACCESS_KEY_ID,
+		secretAccessKey: ENV.S3_BUCKET.SECRET_ACCESS_KEY,
 		signatureVersion: 'v4',
-		region: process.env.AWS_S3_REGION,
+		region: ENV.S3_BUCKET.REGION,
 	})
-}
-
-export const getWasabiS3Object = () => {
-
-	const credentials: Credentials = new Credentials(ENV.S3_BUCKET.ACCESS_KEY_ID, ENV.S3_BUCKET.SECRET_ACCESS_KEY)
-	config.credentials = credentials
-	const s3: S3 = new S3({
-		endpoint: ENV.S3_BUCKET.ENDPOINT,
-	})
-	return s3
-
 }
 
 /**
- * @description returns Aws Simple Email Service(SES) object
- * @author Waqar Hussain
+ * @description returns AWS Simple Email Service (SES) client
  */
 export const getSesObject = () => {
 	return new SES({
-		accessKeyId: process.env.AWS_ACCESSS_KEY_ID,
-		secretAccessKey: process.env.AWS_SECRET_KEY,
+		accessKeyId: ENV.S3_BUCKET.ACCESS_KEY_ID,
+		secretAccessKey: ENV.S3_BUCKET.SECRET_ACCESS_KEY,
 		signatureVersion: 'v4',
-		region: process.env.AWS_SES_REGION,
+		region: ENV.AWS_SES.REGION,
 	})
 }
 

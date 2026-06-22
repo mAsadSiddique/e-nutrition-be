@@ -17,6 +17,10 @@ export class Category {
 	@Column({ name: 'is_hot', default: false })
 	isHot: boolean
 
+	@ApiProperty({ description: 'S3 key for category icon (required for parent categories)' })
+	@Column({ name: 'icon_key', type: 'varchar', nullable: true })
+	iconKey: string | null
+
 	@CreateDateColumn({ name: 'created_at' })
 	createdAt: Date
 

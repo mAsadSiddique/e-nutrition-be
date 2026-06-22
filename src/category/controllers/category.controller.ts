@@ -1,10 +1,10 @@
-import { Body, Controller, Delete, Get, ParseIntPipe, Post, Put, Query, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Post, Put, Query, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common'
+import { FileInterceptor } from '@nestjs/platform-express'
 import { CategoryService } from '../category.service'
-// import { CategoryEntitiesEnum } from '../../utils/enums/category-entities.enum'
 import { CreateCategoryDTO } from '../dtos/create-category.dto'
 import { UpdateCategoryDTO } from '../dtos/update-category.dto'
 import { CategoryListingDTO } from '../dtos/category-listing.dto'
-import { ApiBearerAuth, ApiCreatedResponse, ApiNotFoundResponse, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiCreatedResponse, ApiNotFoundResponse, ApiTags } from '@nestjs/swagger'
 import { RESPONSE_MESSAGES } from 'src/utils/enums/response-messages.enum'
 import { Category } from '../entites/category.entity'
 import { AdminAuthGuard } from 'src/auth/guard/admin_auth.guard'
@@ -14,6 +14,8 @@ import { user } from 'src/auth/decorators/user.decorator'
 import { User } from 'src/user/entities/user.entity'
 import { UserAuthGuard } from 'src/auth/guard/user_auth.guard'
 import { IdsDTO } from 'src/shared/dto/ids.dto'
+import { imageFileFilter } from 'src/utils/utils'
+import { ENV } from 'src/config/constant'
 
 @ApiTags('category')
 @ApiBearerAuth('JWT')
@@ -27,8 +29,16 @@ export class CategoryController {
 	})
 	@UseGuards(AdminAuthGuard)
 	@Post('/add')
-	async addCategory(@Body() args: CreateCategoryDTO) {
-		return await this.categoryService.createCategory(args, CategoryEntitiesEnum.CATEGORY)
+	@UseInterceptors(
+		FileInterceptor('icon', {
+			fileFilter: imageFileFilter,
+			limits: { fileSize: ENV.FILE_SIZE.IMAGE_FILE_SIZE },
+		}),
+	)
+	@ApiConsumes('multipart/form-data')
+	@ApiBody({ description: 'Category data + icon file (required for parent category)', schema: { type: 'object', properties: { name: { type: 'string' }, parentId: { type: 'number' }, isHot: { type: 'boolean' }, icon: { type: 'string', format: 'binary' } } } })
+	async addCategory(@Body() args: CreateCategoryDTO, @UploadedFile() icon: Express.Multer.File) {
+		return await this.categoryService.createCategory(args, CategoryEntitiesEnum.CATEGORY, icon)
 	}
 
 	@ApiCreatedResponse({
@@ -40,8 +50,16 @@ export class CategoryController {
 	})
 	@UseGuards(AdminAuthGuard)
 	@Put('/update')
-	async updateCategory(@Body() args: UpdateCategoryDTO) {
-		return await this.categoryService.updateCategory(args, CategoryEntitiesEnum.CATEGORY)
+	@UseInterceptors(
+		FileInterceptor('icon', {
+			fileFilter: imageFileFilter,
+			limits: { fileSize: ENV.FILE_SIZE.IMAGE_FILE_SIZE },
+		}),
+	)
+	@ApiConsumes('multipart/form-data')
+	@ApiBody({ description: 'Category data + optional icon file', schema: { type: 'object', properties: { id: { type: 'number' }, name: { type: 'string' }, isHot: { type: 'boolean' }, icon: { type: 'string', format: 'binary' } } } })
+	async updateCategory(@Body() args: UpdateCategoryDTO, @UploadedFile() icon: Express.Multer.File) {
+		return await this.categoryService.updateCategory(args, CategoryEntitiesEnum.CATEGORY, icon)
 	}
 
 	@ApiCreatedResponse({
