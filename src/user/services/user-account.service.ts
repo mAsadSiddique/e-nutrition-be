@@ -258,8 +258,8 @@ export class UserAccountService {
 			payload.registrationType = RegisterationTypeEnum.GOOGLE
 			this.logger.log(`[RedirectURL] Modified payload registrationType: ${payload.registrationType}`, this.getSocialMediaLoginRedirectUrl.name)
 			const token = this.jwtService.sign(payload)
-			// Return final redirect URL with query params
-			return `${ENV.FE_REDIRECT_PAGES.SOCIAL_MEDIA_REDIRECT_URL}?status=200&token=${token}&user=${JSON.stringify(payload)}`
+			const userParam = encodeURIComponent(JSON.stringify(payload))
+			return `${ENV.FE_REDIRECT_PAGES.SOCIAL_MEDIA_REDIRECT_URL}?status=200&token=${encodeURIComponent(token)}&user=${userParam}`
 		} catch (error) {
 			this.sharedService.sendError(error, this.getSocialMediaLoginRedirectUrl.name)
 		}
