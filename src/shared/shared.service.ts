@@ -258,12 +258,7 @@ export class SharedService {
 
 	async getFileFromS3Bucket(key: string) {
 		try {
-			const params = {
-				Bucket: ENV.S3_BUCKET.NAME,
-				Key: key,
-				Expires: 604800
-			}
-			return await Promise.resolve(this.s3.getSignedUrl('getObject', params))
+			return `https://${ENV.S3_BUCKET.NAME}.s3.${ENV.S3_BUCKET.REGION}.amazonaws.com/${key}`
 		} catch (error) {
 			throw error
 		}
@@ -391,8 +386,7 @@ export class SharedService {
 				console.log(error)
 				this.exceptionService.sendNotFoundException(RESPONSE_MESSAGES.IMAGE_NOT_FOUND)
 			}
-			const signedUrl = this.s3.getSignedUrl('getObject', params)
-			return signedUrl
+			return `https://${ENV.S3_BUCKET.NAME}.s3.${ENV.S3_BUCKET.REGION}.amazonaws.com/${key}`
 		} catch (error) {
 			this.sendError(error, this.getFileFromBucket.name)
 		}
@@ -405,22 +399,9 @@ export class SharedService {
 	 */
 	async getFilesFromS3Bucket(keysWithValue: {}) {
 		try {
-			const requests: string[] = []
 			const urlsToBeReturn: any = {}
-			const bucketName = ENV.S3_BUCKET.NAME
-			let counter = 0
 			for (const [key, value] of Object.entries(keysWithValue)) {
-				const param = {
-					Bucket: bucketName,
-					Key: value,
-					Expires: 604800,
-				}
-				requests.push(this.s3.getSignedUrl('getObject', param))
-			}
-			const urls = await Promise.all(requests)
-			for (const [key, value] of Object.entries(keysWithValue)) {
-				urlsToBeReturn[key] = urls[counter]
-				counter++
+				urlsToBeReturn[key] = `https://${ENV.S3_BUCKET.NAME}.s3.${ENV.S3_BUCKET.REGION}.amazonaws.com/${value}`
 			}
 			return urlsToBeReturn
 		} catch (error) {
@@ -435,21 +416,14 @@ export class SharedService {
 	 */
 	async getMultipleFileWithMimeTypeByKeys(keys: PreviewableFileType[]) {
 		try {
-			const requests: string[] = []
+			const urls: string[] = []
 			const docNames: string[] = []
-			const bucketName = ENV.S3_BUCKET.NAME
 			for (const keyObj of keys) {
-				const [[, name], [key, value]] = Object.entries(keyObj)
-				const param = {
-					Bucket: bucketName,
-					Key: value,
-					ResponseContentType: key,
-					ResponseContentDisposition: 'inline',
-				}
-				requests.push(this.s3.getSignedUrl('getObject', param))
+				const [[, name], [, value]] = Object.entries(keyObj)
+				urls.push(`https://${ENV.S3_BUCKET.NAME}.s3.${ENV.S3_BUCKET.REGION}.amazonaws.com/${value}`)
 				docNames.push(name)
 			}
-			return { urls: await Promise.all(requests), docNames }
+			return { urls, docNames }
 		} catch (error) {
 			console.log(error)
 			this.exceptionService.sendNotFoundException(RESPONSE_MESSAGES.IMAGE_NOT_FOUND)
@@ -651,27 +625,10 @@ export class SharedService {
 
 	async getMultipleFilesFromS3Bucket(keysWithValue: Record<string, string>): Promise<Record<string, string>> {
 		try {
-			const requests: Promise<string>[] = []
 			const urlsToBeReturn: ObjectType = {}
 
-			// Create signed URL requests for each file key
-			for (const [key, value] of Object.entries(keysWithValue)) {
-				const param = {
-					Bucket: ENV.S3_BUCKET.NAME,
-					Key: key,
-					Expires: 604800, // 7 days in seconds
-				}
-				requests.push(Promise.resolve(this.s3.getSignedUrl('getObject', param))) // Wrap in Promise for consistency
-			}
-
-			// Resolve all signed URLs
-			const urls = await Promise.all(requests)
-
-			// Map signed URLs back to their original keys
-			let counter = 0
 			for (const key of Object.keys(keysWithValue)) {
-				urlsToBeReturn[key] = urls[counter]
-				counter++
+				urlsToBeReturn[key] = `https://${ENV.S3_BUCKET.NAME}.s3.${ENV.S3_BUCKET.REGION}.amazonaws.com/${key}`
 			}
 			return urlsToBeReturn
 		} catch (error) {
