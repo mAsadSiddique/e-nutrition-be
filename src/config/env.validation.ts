@@ -43,8 +43,8 @@ export const envValidationSchema = z.object({
   AUDIO_FILE_SIZE: z.string(),
   IMAGE_FIELD_SIZE: z.string(),
 
-  // Sendgrid credentials
-  SEND_GRID_API_KEY: z.string(),
+  // Resend
+  RESEND_API_KEY: z.string(),
 
   // Suppord mails
   SUPPORT_SENDER_EMAIL: z.string(),
