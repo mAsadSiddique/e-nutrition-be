@@ -20,6 +20,11 @@ export class CreateCategoryDTO {
 		example: 4
 	})
 	@IsOptional()
+	@Transform(({ value }) => {
+		// multipart/form-data always sends strings; coerce to number
+		if (value === '' || value === null || value === undefined || value === 'null') return undefined
+		return Number(value)
+	})
 	@IsNumber()
 	parentId: number
 
